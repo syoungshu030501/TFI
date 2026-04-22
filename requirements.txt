@@ -1,0 +1,45 @@
+# ===== TFI Qwen3.5-9B Evidence-Driven Pipeline =====
+# 安装顺序 (NVIDIA L20 / RTX 5090 / CUDA 12.4):
+#   conda create -n TFI python=3.11 -y && conda activate TFI
+#   pip install torch==2.5.1 torchvision==0.20.1
+#   pip install -r requirements.txt
+
+# ---- core DL ----
+torch==2.5.1
+torchvision==0.20.1
+transformers>=4.51,<5.0       # Qwen3.5-9B 在 4.51+ 主线支持
+peft>=0.13
+accelerate>=1.0
+safetensors>=0.4
+einops
+sentencepiece
+protobuf
+bitsandbytes                  # 可选 4-bit 加载
+
+# ---- segmentation / classification ----
+timm
+segmentation-models-pytorch
+albumentations
+opencv-python-headless
+pycocotools
+
+# ---- VLM ----
+qwen-vl-utils
+
+# ---- calibrator ----
+xgboost
+scikit-learn
+pandas
+# 可选 backend (按需 pip install)：
+#   pip install lightgbm                 # backend=lgbm_mono (单调约束 + isotonic)
+#   pip install 'tabpfn>=2.5'            # backend=tabpfn   (2026 SOTA, 非商业)
+#   pip install interpret                # backend=ebm      (Explainable Boosting)
+
+# ---- 配置 / 日志 / 模型下载 ----
+pyyaml
+modelscope                    # 用于从 ModelScope 下 Qwen3.5-9B
+tqdm
+
+# ---- legacy (旧 397B 蒸馏链路, 已归档到 legacy/) ----
+# deepspeed>=0.18              # 仅当恢复 legacy/train_teacher.py 时需要
+# fla                          # Qwen3.5 在 transformers 4.51+ 已无需手动装

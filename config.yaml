@@ -1,0 +1,47 @@
+# TFI 推理 / 评估统一配置
+# 所有路径均相对项目根目录
+
+# ---- 数据 ----
+test_dir: data/raw/test/Image
+val_dir: data/raw/val
+train_dir: data/raw/train_resume
+output: submit.csv
+
+# ---- 缓存与日志 ----
+cache_dir: cache
+log_file: logs/vlm/inference.log
+
+# ---- checkpoint 路径 ----
+checkpoint_dir: checkpoints
+
+# ---- 模型路径 ----
+vlm_model: checkpoints/qwen35_9b   # 微调后, 不存在则回退到 vlm_base
+vlm_base: models/Qwen3.5-9B        # ModelScope 下载的基座
+calibrator_dir: checkpoints/calibrator
+
+# ---- 模块开关 (默认全开, 消融时按需关闭) ----
+use_classifier: true
+use_calibrator: true
+use_convnext: true   # false 时仅 segformer + maxvit (简历主集成)
+
+# ---- 分割推理 ----
+img_sizes: [768, 896]              # 多尺度 TTA
+img_sizes_no_maxvit: [640]
+threshold: 0.30                    # seg 概率二值化阈值
+use_tta: true
+min_area: 100
+morph_kernel: 5
+label_threshold: 0.001
+
+# ---- 旧硬规则 (calibrator 不可用时回退) ----
+cls_override_low: 0.20
+cls_override_high: 0.90
+
+# ---- VLM 生成 ----
+max_new_tokens: 1024
+temperature: 0.30
+top_p: 0.90
+do_sample: true
+
+# ---- GPU ----
+gpu: 0
