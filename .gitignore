@@ -22,6 +22,7 @@ __pycache__/
 #  NFS symlinks（这些目录在本机是符号链接，clone 到别处就坏）
 # ============================================================
 cache
+cache_val
 checkpoints
 models
 
@@ -55,6 +56,9 @@ runs/
 logs/**/*.log
 logs/**/*.tmp
 !logs/seg/segformer_fold0.log
+# 但保留 markdown 报告 + 评分结果
+!logs/**/*.md
+!logs/**/*.json
 
 # ============================================================
 #  IDE / OS

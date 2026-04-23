@@ -30,12 +30,43 @@ from torch.utils.data import WeightedRandomSampler
 from transformers import (
     AutoModelForImageTextToText,
     AutoProcessor,
+    BitsAndBytesConfig,
     Trainer,
     TrainingArguments,
 )
 
 from dataset import VLMSFTDataset
 from vlm_collator import VLMDataCollator, find_lora_target_modules
+
+
+def patch_chunked_cross_entropy(chunk_size: int = 512) -> None:
+    """Monkey-patch transformers.loss.loss_utils.fixed_cross_entropy 沿 token 维分块计算。
+
+    Qwen3.5 词表 248k，单步 logits ~750MB(bf16)，反向再翻倍 + softmax 中间张量
+    会触发 OOM。沿序列维 chunk_size 切分，按 num_items_in_batch 求和后再除一次，
+    数学上等价于原 reduction="sum"/mean。
+    """
+    from transformers.loss import loss_utils
+
+    orig_fce = loss_utils.fixed_cross_entropy
+
+    def chunked_fce(source, target, num_items_in_batch=None, ignore_index=-100, **kwargs):
+        if source.dim() != 2 or source.shape[0] <= chunk_size:
+            return orig_fce(source, target, num_items_in_batch, ignore_index, **kwargs)
+        total_loss = source.new_zeros((), dtype=torch.float32)
+        for i in range(0, source.shape[0], chunk_size):
+            sl = slice(i, i + chunk_size)
+            chunk_loss = torch.nn.functional.cross_entropy(
+                source[sl], target[sl], ignore_index=ignore_index, reduction="sum",
+            )
+            total_loss = total_loss + chunk_loss.float()
+        if num_items_in_batch is not None:
+            return total_loss / num_items_in_batch
+        valid = (target != ignore_index).sum().clamp(min=1)
+        return total_loss / valid
+
+    loss_utils.fixed_cross_entropy = chunked_fce
+    print(f"[patch] cross_entropy chunked along seq, chunk_size={chunk_size}")
 
 
 def build_sample_weights(labels):
@@ -54,9 +85,9 @@ class WeightedSamplerTrainer(Trainer):
         super().__init__(*args, **kwargs)
         self.sample_weights = sample_weights
 
-    def _get_train_sampler(self):
+    def _get_train_sampler(self, *args, **kwargs):
         if self.sample_weights is None or self.args.world_size > 1:
-            return super()._get_train_sampler()
+            return super()._get_train_sampler(*args, **kwargs)
         return WeightedRandomSampler(
             self.sample_weights,
             num_samples=len(self.sample_weights),
@@ -83,6 +114,17 @@ def parse_args():
     p.add_argument("--gpu", type=int, default=0)
 
     p.add_argument("--full_ft", action="store_true", help="全量微调 (默认 LoRA)")
+    p.add_argument("--use_4bit", action="store_true",
+                   help="QLoRA: 用 NF4 4-bit 量化加载 base，显存约 9GB（与 LoRA 互斥于 full_ft）")
+    p.add_argument("--device_map", type=str, default=None,
+                   help="多卡模型并行：传 'auto' / 'balanced'，会按 CUDA_VISIBLE_DEVICES 切分。"
+                        "与 --gpu 互斥；用此模式时不要走 accelerate/torchrun")
+    p.add_argument("--chunked_ce_size", type=int, default=512,
+                   help="将 cross_entropy 按 token 维度分块，避免 [seq, vocab=248k] OOM。"
+                        "0 = 关闭")
+    p.add_argument("--max_image_pixels", type=int, default=512 * 512,
+                   help="processor.image_processor.max_pixels，限制视觉 token 数。"
+                        "Qwen-VL patch 28×28：512×512≈256 token，768×768≈576 token。0=不改")
     p.add_argument("--lora_r", type=int, default=64)
     p.add_argument("--lora_alpha", type=int, default=128)
     p.add_argument("--lora_dropout", type=float, default=0.05)
@@ -108,8 +150,11 @@ def parse_args():
 
 def main():
     args = parse_args()
-    if args.local_rank == -1 and "LOCAL_RANK" not in os.environ:
+    if args.local_rank == -1 and "LOCAL_RANK" not in os.environ and args.device_map is None:
         os.environ.setdefault("CUDA_VISIBLE_DEVICES", str(args.gpu))
+
+    if args.chunked_ce_size > 0:
+        patch_chunked_cross_entropy(args.chunked_ce_size)
 
     os.makedirs(args.output_dir, exist_ok=True)
     print(f"[cfg] model={args.model_name}  full_ft={args.full_ft}  "
@@ -120,18 +165,61 @@ def main():
     if processor.tokenizer.pad_token is None:
         processor.tokenizer.pad_token = processor.tokenizer.eos_token
 
-    model = AutoModelForImageTextToText.from_pretrained(
-        args.model_name,
+    # 限制图像分辨率，避免 image tokens 失控
+    # Qwen3-VL: patch_size=16, merge_size=2，单 vision token ~ 32×32 px
+    # 512×512 → 256 tokens；384×384 → 144 tokens
+    if args.max_image_pixels > 0:
+        ip = getattr(processor, "image_processor", None)
+        if ip is not None:
+            edge2 = args.max_image_pixels
+            if hasattr(ip, "size") and ip.size is not None:
+                try:
+                    ip.size.longest_edge = edge2
+                except Exception:
+                    ip.size["longest_edge"] = edge2
+            if hasattr(ip, "max_pixels"):
+                ip.max_pixels = edge2
+            ps = getattr(ip, "patch_size", 16)
+            ms = getattr(ip, "merge_size", 2)
+            tok_per_axis = (int(edge2 ** 0.5)) // (ps * ms)
+            print(f"[image] longest_edge<= {edge2} px ({int(edge2**0.5)}×{int(edge2**0.5)})  "
+                  f"≈ {tok_per_axis*tok_per_axis} vision tokens")
+
+    model_load_kwargs = dict(
         dtype=torch.bfloat16,
         trust_remote_code=True,
         attn_implementation="sdpa",
+    )
+    if args.device_map is not None:
+        model_load_kwargs["device_map"] = args.device_map
+        n_gpus = torch.cuda.device_count()
+        print(f"[mode] model parallel via device_map={args.device_map!r}  "
+              f"visible_gpus={n_gpus}")
+    if args.use_4bit:
+        if args.full_ft:
+            raise ValueError("--use_4bit 不能与 --full_ft 同时开")
+        bnb_cfg = BitsAndBytesConfig(
+            load_in_4bit=True,
+            bnb_4bit_quant_type="nf4",
+            bnb_4bit_compute_dtype=torch.bfloat16,
+            bnb_4bit_use_double_quant=True,
+        )
+        model_load_kwargs["quantization_config"] = bnb_cfg
+        print("[mode] QLoRA (4-bit NF4 base + bf16 LoRA)")
+
+    model = AutoModelForImageTextToText.from_pretrained(
+        args.model_name, **model_load_kwargs
     )
 
     if args.full_ft:
         lr = args.full_ft_lr
         print("[mode] full fine-tune")
     else:
-        from peft import LoraConfig, get_peft_model, TaskType
+        from peft import LoraConfig, get_peft_model, TaskType, prepare_model_for_kbit_training
+        if args.use_4bit:
+            model = prepare_model_for_kbit_training(
+                model, use_gradient_checkpointing=True
+            )
         target_modules = find_lora_target_modules(model)
         print(f"[lora] target_modules ({len(target_modules)}): {target_modules}")
         lora_cfg = LoraConfig(
@@ -149,6 +237,11 @@ def main():
     model.gradient_checkpointing_enable()
     if hasattr(model, "enable_input_require_grads"):
         model.enable_input_require_grads()
+
+    if args.device_map is not None:
+        # Trainer 通过这两个 flag 判断已做模型并行，不再对模型 .to(device)
+        model.is_parallelizable = True
+        model.model_parallel = True
 
     # ---- dataset ----
     train_dataset = VLMSFTDataset(
@@ -221,4 +314,3 @@ def main():
 
 if __name__ == "__main__":
     main()
-n()

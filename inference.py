@@ -277,8 +277,20 @@ def stage2_evidence_and_calibrate(seg_outputs, cls_scores, cfg, logger):
                      label_threshold=cfg["label_threshold"],
                      min_area_px=cfg["min_area"])
 
-        cls_mean = cls_scores.get(name, {}).get("mean", 0.5) if cls_scores else None
-        cls_std = cls_scores.get(name, {}).get("std", 0.0) if cls_scores else None
+        if cls_scores:
+            raw = cls_scores.get(name, None)
+            if isinstance(raw, dict):
+                cls_mean = raw.get("mean", 0.5)
+                cls_std = raw.get("std", 0.0)
+            elif isinstance(raw, (list, tuple)) and len(raw) >= 1:
+                cls_mean = float(raw[0])
+                cls_std = float(raw[1]) if len(raw) > 1 else 0.0
+            elif isinstance(raw, (int, float)):
+                cls_mean = float(raw); cls_std = 0.0
+            else:
+                cls_mean = 0.5; cls_std = 0.0
+        else:
+            cls_mean = None; cls_std = None
 
         if cal is not None:
             p_forged, label = cal.predict(ev, cls_mean=cls_mean, cls_std=cls_std)
@@ -328,12 +340,54 @@ def stage3_vlm_generate(stage2_results, cfg, device, logger, cache_file):
         logger.info("[stage3] all done, skipping")
         return done
 
-    model_path = cfg["vlm_model"] if os.path.exists(cfg["vlm_model"]) else cfg["vlm_base"]
-    logger.info(f"[stage3] loading VLM: {model_path}")
-    processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
-    model = AutoModelForImageTextToText.from_pretrained(
-        model_path, dtype=torch.bfloat16, trust_remote_code=True,
-    ).to(device).eval()
+    vlm_dir = cfg["vlm_model"]
+    base_dir = cfg["vlm_base"]
+    has_adapter = os.path.exists(os.path.join(vlm_dir, "adapter_config.json"))
+    has_full = os.path.exists(os.path.join(vlm_dir, "config.json"))
+
+    if has_adapter and not has_full:
+        # LoRA adapter 模式：基座 + adapter 合并
+        from peft import PeftModel
+        logger.info(f"[stage3] base={base_dir}  +  LoRA={vlm_dir}")
+        processor = AutoProcessor.from_pretrained(vlm_dir, trust_remote_code=True)
+        # 限制图像分辨率与训练时一致 (384²) 避免 OOM
+        ip = getattr(processor, "image_processor", None)
+        if ip is not None and hasattr(ip, "size") and ip.size is not None:
+            try:
+                ip.size.longest_edge = 384 * 384
+            except Exception:
+                pass
+        # 多卡 device_map=auto, 5 卡训得起单卡也跑得起 (推理无激活+无优化器)
+        n_gpu = torch.cuda.device_count()
+        load_kwargs = dict(dtype=torch.bfloat16, trust_remote_code=True,
+                           attn_implementation="sdpa")
+        if n_gpu > 1:
+            load_kwargs["device_map"] = "auto"
+        base = AutoModelForImageTextToText.from_pretrained(base_dir, **load_kwargs)
+        model = PeftModel.from_pretrained(base, vlm_dir)
+        model = model.merge_and_unload()
+        if n_gpu == 1:
+            model = model.to(device)
+        model.eval()
+    else:
+        model_path = vlm_dir if has_full else base_dir
+        logger.info(f"[stage3] loading VLM (full): {model_path}")
+        processor = AutoProcessor.from_pretrained(model_path, trust_remote_code=True)
+        ip = getattr(processor, "image_processor", None)
+        if ip is not None and hasattr(ip, "size") and ip.size is not None:
+            try:
+                ip.size.longest_edge = 384 * 384
+            except Exception:
+                pass
+        n_gpu = torch.cuda.device_count()
+        load_kwargs = dict(dtype=torch.bfloat16, trust_remote_code=True,
+                           attn_implementation="sdpa")
+        if n_gpu > 1:
+            load_kwargs["device_map"] = "auto"
+        model = AutoModelForImageTextToText.from_pretrained(model_path, **load_kwargs)
+        if n_gpu == 1:
+            model = model.to(device)
+        model.eval()
 
     system_prompt = (
         "你是专业的图像伪造鉴定专家。下面会给你一张图片以及一份"
@@ -436,9 +490,12 @@ def write_csv(stage2_results, explanations, output_path, logger):
 def main():
     parser = argparse.ArgumentParser()
     parser.add_argument("--config", default="config.yaml")
-    parser.add_argument("--gpu", type=int, default=None)
+    parser.add_argument("--gpu", type=str, default=None,
+                        help="单卡传 '3'；多卡推理传 '4,5,6' 启用 device_map=auto (VLM 大模型用)")
     parser.add_argument("--test_dir", default=None)
     parser.add_argument("--output", default=None)
+    parser.add_argument("--cache_dir", default=None,
+                        help="覆盖 config.cache_dir (val 推理用独立缓存避免冲突)")
     parser.add_argument("--no_calibrator", action="store_true")
     parser.add_argument("--no_classifier", action="store_true")
     parser.add_argument("--no_convnext", action="store_true")
@@ -448,11 +505,13 @@ def main():
     if args.gpu is not None: cfg["gpu"] = args.gpu
     if args.test_dir: cfg["test_dir"] = args.test_dir
     if args.output: cfg["output"] = args.output
+    if args.cache_dir: cfg["cache_dir"] = args.cache_dir
     if args.no_calibrator: cfg["use_calibrator"] = False
     if args.no_classifier: cfg["use_classifier"] = False
     if args.no_convnext: cfg["use_convnext"] = False
 
     os.environ["CUDA_VISIBLE_DEVICES"] = str(cfg["gpu"])
+    # 干净 default device，多卡时第一个 visible GPU 即 cuda:0
     cache_dir = Path(cfg["cache_dir"]); cache_dir.mkdir(parents=True, exist_ok=True)
 
     logger = setup_logging(cfg["log_file"])

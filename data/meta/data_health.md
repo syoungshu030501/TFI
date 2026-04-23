@@ -27,7 +27,7 @@
 
 | 项 | 值 | 判定 |
 |---|---|:-:|
-| `vlm/caption_api_v3/*.jsonl` | 0/1280 行 | ⏳ |
+| `vlm/caption_api_v3/*.jsonl` | 1600/1280 行 | ✓ |
 
 ## ④ symlink 健康
 
@@ -46,14 +46,12 @@
 | 项 | 值 | 判定 |
 |---|---|:-:|
 | `checkpoints/seg/segformer_fold0` | 存在 | ✓ |
-| `checkpoints/seg/segformer_fold1` | 缺失 | · |
-| `checkpoints/seg/segformer_fold2` | 缺失 | · |
-| `checkpoints/seg/segformer_fold3` | 缺失 | · |
-| `checkpoints/seg/segformer_fold4` | 缺失 | · |
-| `checkpoints/cls/efficientnet_fold0` | 缺失 | · |
+| `checkpoints/seg/segformer_fold1` | 存在 | ✓ |
+| `checkpoints/seg/segformer_fold2` | 存在 | ✓ |
+| `checkpoints/seg/segformer_fold3` | 存在 | ✓ |
+| `checkpoints/seg/segformer_fold4` | 存在 | ✓ |
+| `checkpoints/cls/efficientnet_fold0` | 存在 | ✓ |
 | `checkpoints/calibrator` | 缺失 | · |
 | `checkpoints/qwen35_9b` | 缺失 | · |
 
-## 失败的硬契约
-
-- vlm/caption_api_v3 0 < 1152 (90% 准入线)
+## 状态：✅ 全部硬契约通过

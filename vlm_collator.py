@@ -67,6 +67,10 @@ class VLMDataCollator:
         pad_id = self.tokenizer.pad_token_id
         if pad_id is not None:
             labels[labels == pad_id] = -100
+        # 超长样本：把多出来的 token 的 label 置 -100，模型仍 forward 但 loss 不计
+        # （image token 对齐由 processor 强制要求，不能直接 truncate input_ids）
+        if self.max_length and labels.size(1) > self.max_length:
+            labels[:, self.max_length:] = -100
         inputs["labels"] = labels
         return inputs
 

@@ -1,218 +1,71 @@
 /home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
   original_init(self, **validated_kwargs)
-Some weights of SegformerForSemanticSegmentation were not initialized from the model checkpoint at nvidia/segformer-b5-finetuned-ade-640-640 and are newly initialized because the shapes did not match:
-- decode_head.classifier.weight: found shape torch.Size([150, 768, 1, 1]) in the checkpoint and torch.Size([1, 768, 1, 1]) in the model instantiated
-- decode_head.classifier.bias: found shape torch.Size([150]) in the checkpoint and torch.Size([1]) in the model instantiated
-You should probably TRAIN this model on a down-stream task to be able to use it for predictions and inference.
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:353: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
+/home/young/TFI/train_seg_ensemble.py:517: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
   scaler = GradScaler()
 
 ============================================================
-Training: arch=segformer, fold=0, gpu=0
+Training: arch=segformer, fold=0, gpu=5
 ============================================================
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:236: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+[data] base_train=800  extra=1162  val=200  total_train=1962  pos=702  neg=1260
+[sampler] weighted sampler enabled
+[resume] full state from /home/young/TFI/checkpoints/seg/segformer_fold0/last_checkpoint.pt | start_epoch=12 best_iou=0.5989
+/home/young/TFI/train_seg_ensemble.py:360: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with autocast(dtype=torch.bfloat16):
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:268: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
+/home/young/TFI/train_seg_ensemble.py:392: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
   with autocast(dtype=torch.bfloat16):
-  Epoch   1/100 | loss=0.5437 | IoU=0.1609 | Dice=0.2347 | Acc=0.8036 | 117.5s
-    -> New best IoU: 0.1609
-  Epoch   2/100 | loss=0.4618 | IoU=0.3774 | Dice=0.4479 | Acc=0.7309 | 116.3s
-    -> New best IoU: 0.3774
-  Epoch   3/100 | loss=0.3643 | IoU=0.3910 | Dice=0.4564 | Acc=0.6836 | 116.2s
-    -> New best IoU: 0.3910
-  Epoch   4/100 | loss=0.2818 | IoU=0.4262 | Dice=0.5036 | Acc=0.7891 | 116.5s
-    -> New best IoU: 0.4262
-  Epoch   5/100 | loss=0.2224 | IoU=0.4688 | Dice=0.5374 | Acc=0.7418 | 116.3s
-    -> New best IoU: 0.4688
-  Epoch   6/100 | loss=0.1697 | IoU=0.5156 | Dice=0.5857 | Acc=0.8145 | 119.7s
-    -> New best IoU: 0.5156
-  Epoch   7/100 | loss=0.1491 | IoU=0.5176 | Dice=0.5776 | Acc=0.7491 | 118.8s
-    -> New best IoU: 0.5176
-  Epoch   8/100 | loss=0.1373 | IoU=0.5573 | Dice=0.6265 | Acc=0.8109 | 116.5s
-    -> New best IoU: 0.5573
-  Epoch   9/100 | loss=0.1126 | IoU=0.5578 | Dice=0.6184 | Acc=0.7745 | 116.8s
-    -> New best IoU: 0.5578
-  Epoch  10/100 | loss=0.1094 | IoU=0.5748 | Dice=0.6426 | Acc=0.8145 | 116.5s
-    -> New best IoU: 0.5748
-  Epoch  11/100 | loss=0.0973 | IoU=0.5669 | Dice=0.6323 | Acc=0.7964 | 119.3s
-  Epoch  12/100 | loss=0.1028 | IoU=0.5853 | Dice=0.6473 | Acc=0.8036 | 116.4s
-    -> New best IoU: 0.5853
-  Epoch  13/100 | loss=0.0849 | IoU=0.5913 | Dice=0.6572 | Acc=0.8327 | 116.6s
-    -> New best IoU: 0.5913
-  Epoch  14/100 | loss=0.0880 | IoU=0.6015 | Dice=0.6609 | Acc=0.7855 | 116.5s
-    -> New best IoU: 0.6015
-  Epoch  15/100 | loss=0.0777 | IoU=0.6241 | Dice=0.6852 | Acc=0.8218 | 116.2s
-    -> New best IoU: 0.6241
-  Epoch  16/100 | loss=0.0747 | IoU=0.6338 | Dice=0.6928 | Acc=0.8436 | 116.8s
-    -> New best IoU: 0.6338
-  Epoch  17/100 | loss=0.0769 | IoU=0.6415 | Dice=0.6973 | Acc=0.8327 | 116.6s
-    -> New best IoU: 0.6415
-  Epoch  18/100 | loss=0.0705 | IoU=0.6422 | Dice=0.7011 | Acc=0.8364 | 116.4s
-    -> New best IoU: 0.6422
-  Epoch  19/100 | loss=0.0701 | IoU=0.6451 | Dice=0.7003 | Acc=0.8364 | 116.3s
-    -> New best IoU: 0.6451
-  Epoch  20/100 | loss=0.0668 | IoU=0.6460 | Dice=0.7027 | Acc=0.8291 | 116.1s
-    -> New best IoU: 0.6460
-  Epoch  21/100 | loss=0.0672 | IoU=0.6521 | Dice=0.7089 | Acc=0.8291 | 116.6s
-    -> New best IoU: 0.6521
-  Epoch  22/100 | loss=0.0615 | IoU=0.6240 | Dice=0.6819 | Acc=0.8473 | 116.5s
-  Epoch  23/100 | loss=0.0644 | IoU=0.6567 | Dice=0.7149 | Acc=0.8800 | 116.2s
-    -> New best IoU: 0.6567
-  Epoch  24/100 | loss=0.0579 | IoU=0.6656 | Dice=0.7227 | Acc=0.8655 | 116.2s
-    -> New best IoU: 0.6656
-  Epoch  25/100 | loss=0.0571 | IoU=0.6666 | Dice=0.7205 | Acc=0.8655 | 117.9s
-    -> New best IoU: 0.6666
-  Epoch  26/100 | loss=0.0564 | IoU=0.6586 | Dice=0.7143 | Acc=0.8255 | 119.5s
-  Epoch  27/100 | loss=0.0548 | IoU=0.6725 | Dice=0.7260 | Acc=0.8509 | 118.9s
-    -> New best IoU: 0.6725
-  Epoch  28/100 | loss=0.0557 | IoU=0.6819 | Dice=0.7346 | Acc=0.8436 | 118.9s
-    -> New best IoU: 0.6819
-  Epoch  29/100 | loss=0.0531 | IoU=0.6914 | Dice=0.7458 | Acc=0.8655 | 119.1s
-    -> New best IoU: 0.6914
-  Epoch  30/100 | loss=0.0516 | IoU=0.6704 | Dice=0.7253 | Acc=0.8655 | 118.8s
-  Epoch  31/100 | loss=0.0478 | IoU=0.6743 | Dice=0.7280 | Acc=0.8545 | 117.9s
-  Epoch  32/100 | loss=0.0466 | IoU=0.6709 | Dice=0.7276 | Acc=0.8618 | 116.4s
-  Epoch  33/100 | loss=0.0469 | IoU=0.6431 | Dice=0.7013 | Acc=0.8509 | 116.0s
-  Epoch  34/100 | loss=0.0477 | IoU=0.6972 | Dice=0.7500 | Acc=0.8764 | 120.7s
-    -> New best IoU: 0.6972
-  Epoch  35/100 | loss=0.0439 | IoU=0.7058 | Dice=0.7592 | Acc=0.8800 | 116.5s
-    -> New best IoU: 0.7058
-  Epoch  36/100 | loss=0.0472 | IoU=0.7006 | Dice=0.7544 | Acc=0.8836 | 116.4s
-  Epoch  37/100 | loss=0.0428 | IoU=0.6845 | Dice=0.7387 | Acc=0.8800 | 116.3s
-  Epoch  38/100 | loss=0.0428 | IoU=0.6920 | Dice=0.7468 | Acc=0.8873 | 116.6s
-  Epoch  39/100 | loss=0.0412 | IoU=0.6738 | Dice=0.7296 | Acc=0.8655 | 116.3s
-  Epoch  40/100 | loss=0.0417 | IoU=0.6993 | Dice=0.7538 | Acc=0.8764 | 116.5s
-  Epoch  41/100 | loss=0.0414 | IoU=0.6927 | Dice=0.7489 | Acc=0.8909 | 116.3s
-  Epoch  42/100 | loss=0.0392 | IoU=0.7031 | Dice=0.7565 | Acc=0.8836 | 116.5s
-  Epoch  43/100 | loss=0.0415 | IoU=0.6969 | Dice=0.7490 | Acc=0.8764 | 116.9s
-  Epoch  44/100 | loss=0.0411 | IoU=0.6890 | Dice=0.7415 | Acc=0.8618 | 116.7s
-  Epoch  45/100 | loss=0.0404 | IoU=0.6848 | Dice=0.7382 | Acc=0.8473 | 116.6s
-  Epoch  46/100 | loss=0.0358 | IoU=0.7103 | Dice=0.7627 | Acc=0.8873 | 117.0s
-    -> New best IoU: 0.7103
-  Epoch  47/100 | loss=0.0342 | IoU=0.7051 | Dice=0.7574 | Acc=0.8800 | 116.4s
-  Epoch  48/100 | loss=0.0354 | IoU=0.7035 | Dice=0.7533 | Acc=0.8800 | 116.4s
-  Epoch  49/100 | loss=0.0359 | IoU=0.7061 | Dice=0.7588 | Acc=0.8945 | 116.7s
-  Epoch  50/100 | loss=0.0358 | IoU=0.7052 | Dice=0.7566 | Acc=0.8800 | 117.1s
-  Epoch  51/100 | loss=0.0353 | IoU=0.7087 | Dice=0.7598 | Acc=0.8909 | 116.3s
-  Epoch  52/100 | loss=0.0340 | IoU=0.6954 | Dice=0.7480 | Acc=0.8800 | 116.6s
-  Epoch  53/100 | loss=0.0331 | IoU=0.7108 | Dice=0.7629 | Acc=0.8982 | 116.8s
-    -> New best IoU: 0.7108
-  Epoch  54/100 | loss=0.0333 | IoU=0.7110 | Dice=0.7627 | Acc=0.9055 | 116.8s
-    -> New best IoU: 0.7110
-  Epoch  55/100 | loss=0.0351 | IoU=0.7170 | Dice=0.7680 | Acc=0.8982 | 116.2s
-    -> New best IoU: 0.7170
-  Epoch  56/100 | loss=0.0328 | IoU=0.7132 | Dice=0.7636 | Acc=0.8982 | 116.2s
-  Epoch  57/100 | loss=0.0295 | IoU=0.7182 | Dice=0.7702 | Acc=0.8982 | 116.6s
-    -> New best IoU: 0.7182
-/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
+  Epoch  13/50 | loss=0.1139 | IoU=0.5903 | Dice=0.6550 | Acc=0.8350 | 196.6s
+  Epoch  14/50 | loss=0.1068 | IoU=0.5860 | Dice=0.6408 | Acc=0.7900 | 195.0s
+  Epoch  15/50 | loss=0.0988 | IoU=0.6136 | Dice=0.6782 | Acc=0.8550 | 195.3s
+    -> New best IoU: 0.6136
+  Epoch  16/50 | loss=0.1004 | IoU=0.6048 | Dice=0.6669 | Acc=0.8350 | 195.0s
+  Epoch  17/50 | loss=0.0864 | IoU=0.5885 | Dice=0.6513 | Acc=0.8200 | 195.1s
+  Epoch  18/50 | loss=0.0962 | IoU=0.6209 | Dice=0.6803 | Acc=0.8550 | 195.2s
+    -> New best IoU: 0.6209
+  Epoch  19/50 | loss=0.0808 | IoU=0.6135 | Dice=0.6754 | Acc=0.8250 | 194.9s
+  Epoch  20/50 | loss=0.0751 | IoU=0.6197 | Dice=0.6813 | Acc=0.8350 | 194.6s
+  Epoch  21/50 | loss=0.0690 | IoU=0.6205 | Dice=0.6830 | Acc=0.8300 | 194.7s
+  Epoch  22/50 | loss=0.0671 | IoU=0.6149 | Dice=0.6743 | Acc=0.8400 | 194.5s
+  Epoch  23/50 | loss=0.0617 | IoU=0.6330 | Dice=0.6970 | Acc=0.8900 | 194.8s
+    -> New best IoU: 0.6330
+  Epoch  24/50 | loss=0.0563 | IoU=0.6468 | Dice=0.7138 | Acc=0.9050 | 194.8s
+    -> New best IoU: 0.6468
+  Epoch  25/50 | loss=0.0590 | IoU=0.6406 | Dice=0.7045 | Acc=0.8700 | 194.7s
+  Epoch  26/50 | loss=0.0532 | IoU=0.6222 | Dice=0.6837 | Acc=0.8650 | 194.8s
+  Epoch  27/50 | loss=0.0549 | IoU=0.6382 | Dice=0.7020 | Acc=0.8700 | 194.4s
+  Epoch  28/50 | loss=0.0525 | IoU=0.6409 | Dice=0.7049 | Acc=0.8750 | 194.8s
+  Epoch  29/50 | loss=0.0466 | IoU=0.6506 | Dice=0.7143 | Acc=0.8950 | 194.2s
+    -> New best IoU: 0.6506
+  Epoch  30/50 | loss=0.0496 | IoU=0.6459 | Dice=0.7054 | Acc=0.8550 | 194.2s
+  Epoch  31/50 | loss=0.0428 | IoU=0.6555 | Dice=0.7187 | Acc=0.8600 | 194.3s
+    -> New best IoU: 0.6555
+  Epoch  32/50 | loss=0.0468 | IoU=0.6458 | Dice=0.7121 | Acc=0.9050 | 194.3s
+  Epoch  33/50 | loss=0.0531 | IoU=0.6560 | Dice=0.7194 | Acc=0.8800 | 194.4s
+    -> New best IoU: 0.6560
+  Epoch  34/50 | loss=0.0424 | IoU=0.6606 | Dice=0.7239 | Acc=0.8900 | 194.5s
+    -> New best IoU: 0.6606
+  Epoch  35/50 | loss=0.0380 | IoU=0.6613 | Dice=0.7238 | Acc=0.8800 | 194.5s
+    -> New best IoU: 0.6613
+  Epoch  36/50 | loss=0.0407 | IoU=0.6573 | Dice=0.7204 | Acc=0.8800 | 194.5s
+  Epoch  37/50 | loss=0.0405 | IoU=0.6578 | Dice=0.7204 | Acc=0.8750 | 194.7s
+  Epoch  38/50 | loss=0.0419 | IoU=0.6598 | Dice=0.7205 | Acc=0.8650 | 194.3s
+  Epoch  39/50 | loss=0.0406 | IoU=0.6617 | Dice=0.7242 | Acc=0.8800 | 194.8s
+    -> New best IoU: 0.6617
+  Epoch  40/50 | loss=0.0405 | IoU=0.6493 | Dice=0.7105 | Acc=0.8550 | 194.5s
+  Epoch  41/50 | loss=0.0385 | IoU=0.6546 | Dice=0.7162 | Acc=0.8550 | 194.5s
+  Epoch  42/50 | loss=0.0361 | IoU=0.6577 | Dice=0.7192 | Acc=0.8700 | 194.3s
+  Epoch  43/50 | loss=0.0407 | IoU=0.6590 | Dice=0.7194 | Acc=0.8650 | 194.9s
+  Epoch  44/50 | loss=0.0400 | IoU=0.6566 | Dice=0.7174 | Acc=0.8600 | 194.5s
+  Epoch  45/50 | loss=0.0357 | IoU=0.6512 | Dice=0.7106 | Acc=0.8550 | 194.4s
+  Epoch  46/50 | loss=0.0366 | IoU=0.6545 | Dice=0.7145 | Acc=0.8700 | 194.3s
+  Epoch  47/50 | loss=0.0308 | IoU=0.6531 | Dice=0.7130 | Acc=0.8700 | 194.6s
+  Epoch  48/50 | loss=0.0397 | IoU=0.6561 | Dice=0.7168 | Acc=0.8700 | 194.4s
+  Epoch  49/50 | loss=0.0350 | IoU=0.6525 | Dice=0.7117 | Acc=0.8650 | 194.6s
+  Early stopping at epoch 49
 
-============================================================
-Training: arch=segformer, fold=0, gpu=0
-============================================================
-/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-
-============================================================
-Training: arch=segformer, fold=0, gpu=0
-============================================================
-/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-[data] base_train=800  extra=0  val=200  total_train=800  pos=640  neg=160
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:509: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
-  scaler = GradScaler()
-[resume] model weights from checkpoints/seg/segformer_fold0/best_model.pt | start_epoch=57 best_iou=0.7182
-[resume] optimizer/scheduler reset because only model weights were available
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:352: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:384: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-  Epoch  58/100 | loss=0.0480 | IoU=0.8370 | Dice=0.8865 | Acc=0.9550 | 87.1s
-    -> New best IoU: 0.8370
-  Epoch  59/100 | loss=0.0480 | IoU=0.7919 | Dice=0.8437 | Acc=0.9450 | 85.0s
-  Epoch  60/100 | loss=0.0593 | IoU=0.8199 | Dice=0.8753 | Acc=0.9450 | 85.9s
-  Epoch  61/100 | loss=0.0449 | IoU=0.8222 | Dice=0.8751 | Acc=0.9550 | 85.5s
-
-============================================================
-Training: arch=segformer, fold=0, gpu=0
-============================================================
-/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-[data] base_train=800  extra=0  val=200  total_train=800  pos=640  neg=160
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:509: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
-  scaler = GradScaler()
-[resume] full state from checkpoints/seg/segformer_fold0/last_checkpoint.pt | start_epoch=61 best_iou=0.8370
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:352: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:384: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-  Epoch  62/100 | loss=0.0413 | IoU=0.7930 | Dice=0.8488 | Acc=0.9300 | 85.6s
-  Epoch  63/100 | loss=0.0469 | IoU=0.8281 | Dice=0.8818 | Acc=0.9600 | 84.5s
-  Epoch  64/100 | loss=0.0428 | IoU=0.8242 | Dice=0.8756 | Acc=0.9500 | 94.8s
-  Epoch  65/100 | loss=0.0462 | IoU=0.8206 | Dice=0.8740 | Acc=0.9450 | 120.4s
-  Epoch  66/100 | loss=0.0398 | IoU=0.8161 | Dice=0.8707 | Acc=0.9500 | 131.1s
-  Epoch  67/100 | loss=0.0392 | IoU=0.8006 | Dice=0.8540 | Acc=0.9500 | 127.8s
-  Epoch  68/100 | loss=0.0412 | IoU=0.8136 | Dice=0.8657 | Acc=0.9500 | 128.8s
-  Epoch  69/100 | loss=0.0399 | IoU=0.8196 | Dice=0.8724 | Acc=0.9600 | 131.8s
-  Epoch  70/100 | loss=0.0416 | IoU=0.8217 | Dice=0.8753 | Acc=0.9550 | 128.1s
-  Epoch  71/100 | loss=0.0369 | IoU=0.8155 | Dice=0.8675 | Acc=0.9600 | 131.1s
-  Epoch  72/100 | loss=0.0370 | IoU=0.8032 | Dice=0.8563 | Acc=0.9450 | 127.0s
-  Epoch  73/100 | loss=0.0345 | IoU=0.8109 | Dice=0.8638 | Acc=0.9550 | 131.1s
-  Early stopping at epoch 73
-
-Best IoU: 0.8370
-Model saved to: checkpoints/seg/segformer_fold0/best_model.pt
+Best IoU: 0.6617
+Model saved to: /home/young/TFI/checkpoints/seg/segformer_fold0/best_model.pt
 
 ============================================================
 Training Summary:
-  segformer_fold0: IoU=0.8370
-  Average IoU: 0.8370
-
-============================================================
-Training: arch=segformer, fold=1, gpu=0
-============================================================
-/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/albumentations/core/validation.py:114: UserWarning: ShiftScaleRotate is a special case of Affine transform. Please use Affine transform instead.
-  original_init(self, **validated_kwargs)
-[data] base_train=800  extra=0  val=200  total_train=800  pos=640  neg=160
-You passed `num_labels=1` which is incompatible to the `id2label` map of length `150`.
-Loading weights:   0%|          | 0/1172 [00:00<?, ?it/s]Loading weights: 100%|██████████| 1172/1172 [00:00<00:00, 39452.36it/s]
-[1mSegformerForSemanticSegmentation LOAD REPORT[0m from: nvidia/segformer-b5-finetuned-ade-640-640
-Key                           | Status   |                                                                                                     
-------------------------------+----------+-----------------------------------------------------------------------------------------------------
-decode_head.classifier.bias   | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([150]) vs model:torch.Size([1])                      
-decode_head.classifier.weight | MISMATCH | Reinit due to size mismatch - ckpt: torch.Size([150, 768, 1, 1]) vs model:torch.Size([1, 768, 1, 1])
-
-Notes:
-- MISMATCH:	ckpt weights were loaded, but they did not match the original empty weight shapes.
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:509: FutureWarning: `torch.cuda.amp.GradScaler(args...)` is deprecated. Please use `torch.amp.GradScaler('cuda', args...)` instead.
-  scaler = GradScaler()
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:352: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py:384: FutureWarning: `torch.cuda.amp.autocast(args...)` is deprecated. Please use `torch.amp.autocast('cuda', args...)` instead.
-  with autocast(dtype=torch.bfloat16):
-  Epoch   1/100 | loss=0.5258 | IoU=0.1994 | Dice=0.2655 | Acc=0.6800 | 127.9s
-    -> New best IoU: 0.1994
-  Epoch   2/100 | loss=0.4734 | IoU=0.4050 | Dice=0.4749 | Acc=0.7400 | 132.3s
-    -> New best IoU: 0.4050
-  Epoch   3/100 | loss=0.3909 | IoU=0.4542 | Dice=0.5235 | Acc=0.7800 | 125.3s
-    -> New best IoU: 0.4542
-  Epoch   4/100 | loss=0.3190 | IoU=0.4107 | Dice=0.4869 | Acc=0.7800 | 130.1s
-Traceback (most recent call last):
-  File "/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py", line 671, in <module>
-    main()
-  File "/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py", line 658, in main
-    best_iou = train_single_model(arch, fold, args)
-               ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-  File "/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py", line 547, in train_single_model
-    train_loss = train_one_epoch(
-                 ^^^^^^^^^^^^^^^^
-  File "/mnt/nfs/young/my_dt/True-or-Fake-Image-main/train_seg_ensemble.py", line 356, in train_one_epoch
-    scaler.scale(loss).backward()
-  File "/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/torch/_tensor.py", line 626, in backward
-    torch.autograd.backward(
-  File "/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/torch/autograd/__init__.py", line 347, in backward
-    _engine_run_backward(
-  File "/home/young/miniconda3/envs/TFI/lib/python3.11/site-packages/torch/autograd/graph.py", line 823, in _engine_run_backward
-    return Variable._execution_engine.run_backward(  # Calls into the C++ engine to run the backward pass
-           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
-RuntimeError: CUDA error: CUBLAS_STATUS_INTERNAL_ERROR when calling `cublasGemmEx( handle, opa, opb, m, n, k, &falpha, a, CUDA_R_16BF, lda, b, CUDA_R_16BF, ldb, &fbeta, c, CUDA_R_16BF, ldc, compute_type, CUBLAS_GEMM_DEFAULT_TENSOR_OP)`
+  segformer_fold0: IoU=0.6617
+  Average IoU: 0.6617
