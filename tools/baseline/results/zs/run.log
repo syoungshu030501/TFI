@@ -1,0 +1,14 @@
+[16:35:34] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:35:34] val samples: 2 (forged=2, real=0)
+[16:35:34] loading model + processor ...
+[16:37:24] model loaded on cuda, peak mem (alloc): 18.83GB
+[16:38:11] === DONE: /home/young/TFI/tools/baseline/results/zs/predictions.csv (n=2, total=47s) ===
+[16:39:31] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:39:31] val samples: 2 (forged=2, real=0)
+[16:39:31] loading model + processor ...
+[16:39:41] model loaded on cuda, peak mem (alloc): 18.83GB
+[16:40:49] === DONE: /home/young/TFI/tools/baseline/results/zs/predictions.csv (n=2, total=69s) ===
+[16:42:01] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:42:01] val samples: 200 (forged=160, real=40)
+[16:42:01] loading model + processor ...
+[16:42:10] model loaded on cuda, peak mem (alloc): 18.83GB

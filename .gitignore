@@ -61,6 +61,14 @@ logs/**/*.tmp
 !logs/**/*.json
 
 # ============================================================
+#  v2-opd baseline 产物
+# ============================================================
+# 保留 predictions.csv / report.md / summary.csv，忽略 raw/cache 大堆
+tools/baseline/results/**/raw/
+tools/baseline/results/**/cache/
+tools/baseline/results/_logs/
+
+# ============================================================
 #  IDE / OS
 # ============================================================
 .vscode/
