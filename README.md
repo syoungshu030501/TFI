@@ -4,7 +4,17 @@
 >
 > 1000 张训练图（Black 800 = 伪造，White 200 = 真实）+ 200 张验证 + 500 张测试。
 >
-> **官方评测复现 · `S_Fin = 0.9034 / 1.0`**（val 200 张，2026-04 当前最佳）
+> **官方评测复现 · `S_Fin = 0.9034 / 1.0`**（val 200 张，v1.0 SFT baseline）
+
+## 分支说明
+
+| 分支 / Tag | 状态 | 内容 |
+|---|---|---|
+| [`tag v1.0-sft-baseline`](https://github.com/syoungshu030501/TFI/releases/tag/v1.0-sft-baseline) | ✅ 已锁 | 当前 README 1-9 章描述的稳定 5-stage SFT 流水线，S_Fin = 0.9034 |
+| [`branch main`](https://github.com/syoungshu030501/TFI/tree/main) | 稳定版 | 同 v1.0-sft-baseline，对应 commit `63848ee` |
+| [`branch v2-opd`](https://github.com/syoungshu030501/TFI/tree/v2-opd) ← **当前** | 🚧 开发中 | DeepSeek-V4 风格的 specialist OPD 大改造（基于 Qwen3.5-9B + Qwen3.6-27B teacher），目标 S_Fin ≈ 0.945-0.955。设计文档见 §10.5；实施计划见 §15 |
+
+> v2-opd 完成并验证后，将通过 PR 合并回 main 替换为新版主线；当前 main 始终保留 v1.0 的可复现基线。
 
 | 子项 | 值 | 权重 | 贡献 |
 |---|---:|---:|---:|
@@ -33,6 +43,7 @@
 - [十二、项目文件总览](#十二项目文件总览)
 - [十三、面试问答速查（核心）](#十三面试问答速查核心)
 - [十四、关键数字速查表（一页纸）](#十四关键数字速查表一页纸)
+- [十五、v2-opd 实施计划（当前分支工作分解）](#十五v2-opd-实施计划当前分支工作分解)
 
 ---
 
@@ -584,130 +595,227 @@ S_Fin           = 0.9034
 - **loose**：bbox 在图像范围内即可（`0 ≤ x1 < x2 ≤ W`）
 - 默认 strict，生成 ≥ 90% 后切 loose 补齐
 
-### 10.5 下一代方案：specialist OPD（DeepSeek-V4 风格）
+### 10.5 下一代方案：specialist OPD（DeepSeek-V4 风格，基于 Qwen3.5-9B）
 
-DeepSeek-V4 把多个领域 specialist（math/code/reasoning）当 online preference signal，蒸馏到 base。本任务**比通用任务更适合**这套，因为我们的 reward 全部是 ground-truth-derivable 的（不需要人标 preference）。
+> **本节是 v2-opd 分支的设计文档。v1.0 SFT baseline (S_Fin=0.9034) 已 tag 为 `v1.0-sft-baseline` 永久保留。**
 
-#### 10.5.1 整体架构
+DeepSeek-V4（2026-04-23 发布）正式弃用 mixed RL，改为 [On-Policy Distillation (OPD)](https://arxiv.org/abs/2604.00626)：每个领域独立训 specialist (SFT + GRPO)，再用反向 KL 蒸馏到统一 student。本任务比 V4 通用任务**更适合**这套，因为我们所有 reward 都是 ground-truth-derivable，不需要人标 preference。
 
-```
-   ┌─────────────────────────────────────────────────────────┐
-   │  policy: Qwen2.5-VL-7B / Qwen3-VL  (LoRA r=128)         │
-   │   ↓ rollout: N 个 candidate explanation                 │
-   └────────────────┬────────────────────────────────────────┘
-                    │
-   ┌────────────────▼────────────────────────────────────────┐
-   │  reward = α·R_loc  +  β·R_cls  +  γ·R_caption           │
-   │                                                          │
-   │   R_loc      ←  Specialist A (Grounding-DINO + SAM2)    │
-   │                  caption 提到的 bbox 与 GT mask IoU     │
-   │   R_cls      ←  Specialist B (DINOv3-Large finetuned)   │
-   │                  label 一致性 + p_forged 校准           │
-   │   R_caption  ←  Specialist C (Qwen3-MAX rubric, async)  │
-   │                  4 维度 100 分制                         │
-   └────────────────┬────────────────────────────────────────┘
-                    │
-   ┌────────────────▼────────────────────────────────────────┐
-   │  GRPO update on policy (verl framework)                 │
-   │  ref model = SFT 后的 Qwen2.5-VL-7B (frozen)            │
-   └─────────────────────────────────────────────────────────┘
-```
+#### 10.5.1 为什么 policy 选 Qwen3.5-9B（已在本地）
 
-#### 10.5.2 specialist 选型（不保守版）
+我们已下载的 [`Qwen3.5-9B`](https://huggingface.co/Qwen/Qwen3.5-9B)（2026-03-02 发布）就是这个任务的最优 policy 选择，理由都来自官方 HF 模型卡 + 本地 `models/Qwen3.5-9B/config.json`：
 
-| 角色 | 旧方案 | **新方案** | 选型理由 |
-|---|---|---|---|
-| **A · 像素级 forgery 定位 specialist** | SegFormer-B5 5-fold | **DINOv3-Large + Mask2Former 头**（开源） 或 **InternImage-XL + UperNet** | DINOv3 是 2024 SOTA 自监督表征，零样本分割能力比 SegFormer ImageNet pretrained 强一个量级；ImageNet-22k → 改 7 通道 stem → fine-tune 5-fold |
-| **B · 图像级 forgery 分类 specialist** | EfficientNet-V2-L 5-fold | **EVA02-CLIP-L** vision encoder 当 backbone + 2 层 MLP head | EVA02 视觉表征当前 SOTA；CLIP 联合预训练让它对"语义级伪造"（AIGC、拼接）敏感度高，远超 ImageNet ConvNet |
-| **C · bbox grounding specialist (新增)** | 没有 | **Grounding DINO 1.5** (open-vocab) + **SAM2** 精修 | 让 reward 端能验证 caption 提到的「车牌区域」「金额数字」是不是真在那个 bbox 里。这是 OPD 的关键 verifier |
-| **D · caption rubric specialist** | qwen-vl-max（评分时用） | qwen-vl-max（继续用，但纳入训练 reward） | 把 evaluation-time signal 提前到 training-time，端到端拉对齐 |
-| **policy LM** | Qwen3.5-9B + LoRA r=64 | **Qwen2.5-VL-7B-Instruct** + LoRA r=128 + DPO/GRPO | Qwen2.5-VL 比 Qwen3.5-9B 视觉对齐好，对 bbox 指令遵循更稳；7B 比 9B 在 RL 阶段省 25% 显存能跑更大 rollout batch |
-
-> 为什么不继续用 Qwen3.5-9B：Qwen3.5-9B 是纯 LM，靠 vision tower 拼出 VL 能力，bbox 输出格式不稳；Qwen2.5-VL 原生多模态对齐，RL 阶段奖励信号更干净。如果坚持 9B 也可以，但要先把 vision tower 单独再 fine-tune 一轮。
-
-#### 10.5.3 7×L20 (45 GB×6=270 GB，GPU 0 排除) 算力分配方案
-
-**这是激进版方案，按"全部用满"配，不留 buffer：**
-
-```
-┌──────────────────────────────────────────────────────────────────┐
-│  阶段 1 (warmup SFT, 1-2 天)                                       │
-│  GPU 1,2,3,4,5: Qwen2.5-VL-7B SFT，device_map=auto，LoRA r=128    │
-│  GPU 6,7:        DINOv3-Large + Mask2Former 5-fold 同时跑两个 fold  │
-│                  (DINOv3-Large ~1B params, fold 单卡 35 GB 够)     │
-└──────────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────────┐
-│  阶段 2 (specialist 训练, 2 天)                                    │
-│  GPU 1,2: DINOv3 + Mask2Former 剩余 3 fold (轮转)                  │
-│  GPU 3,4: EVA02-CLIP-L + cls head 5-fold (并发 2 fold)             │
-│  GPU 5:    Grounding DINO 1.5 fine-tune (单卡，13B params 用 LoRA) │
-│  GPU 6,7: 持续 SFT 或冻结待命 (作 reward server)                   │
-└──────────────────────────────────────────────────────────────────┘
-
-┌──────────────────────────────────────────────────────────────────┐
-│  阶段 3 (OPD/GRPO 在线训练, 3-5 天，最关键)                        │
-│                                                                    │
-│  ┌── policy rollout (4 卡) ───────────────────┐                    │
-│  │  GPU 1,2,3,4: Qwen2.5-VL-7B + LoRA          │                    │
-│  │  device_map=auto, batch=2/卡, N=8 rollouts │                    │
-│  │  速度 ≈ 30 sec / batch (8 candidates)       │                    │
-│  └────────────────────┬───────────────────────┘                    │
-│                       │ candidate captions + bbox                   │
-│                       ▼                                             │
-│  ┌── reward server (3 卡, 常驻) ──────────────┐                    │
-│  │  GPU 5: DINOv3 specialist (loc reward)     │                    │
-│  │  GPU 6: EVA02 specialist + Grounding DINO  │                    │
-│  │         (cls + bbox grounding)             │                    │
-│  │  GPU 7: 异步 qwen-max API call (caption)   │                    │
-│  │         + reward fusion + GRPO 计算 ref    │                    │
-│  └────────────────────┬───────────────────────┘                    │
-│                       │ rewards                                     │
-│                       ▼                                             │
-│  GRPO update → LoRA delta back to GPU 1-4                          │
-│                                                                    │
-│  预算：100 step / day，800 step ≈ 8 天 → 两轮 epoch                │
-└──────────────────────────────────────────────────────────────────┘
-```
-
-**关键工程要点**：
-1. **不要把 reward server 跟 policy 放同卡** — verl/OpenRLHF 实测同卡 rollout + reward 互相 OOM；分离 colocation 才稳。
-2. **reward server 用 `vllm` 推理 specialist**（不用 transformers）— DINOv3 + EVA02 + GroundingDINO 在 vllm 上 throughput 5×。
-3. **qwen-max rubric 异步调用 + 缓存** — 每个 (image, caption_template) 缓存 24h，重复 caption 直接命中。预算 ¥0.4/张 × 800 张 × 5 轮 ≈ ¥1600。
-4. **DPO 先于 GRPO** — 先用 (chosen, rejected) pairs 跑 DPO 一轮（用 specialist 排序 N=8 rollouts 做合成 preference data），稳定后再上 GRPO。GRPO 直接训不稳。
-5. **不要全参 RL** — LoRA r=128 + 训练 vision projector + 冻结 vision encoder。全参 RL 一是显存爆，二是会破坏 SFT 学到的 caption 风格。
-
-#### 10.5.4 框架选型
-
-| 框架 | 适合度 | 备注 |
+| 关键特性 | 数值 / 实现 | 对本任务的价值 |
 |---|---|---|
-| **verl** (字节) | ⭐⭐⭐⭐⭐ | 原生支持 multi-reward + colocation + LoRA + Qwen-VL，是首选；和你 VLM-posttraining 项目里 future-KL FIPO 同栈 |
-| OpenRLHF | ⭐⭐⭐⭐ | 简单，但 VL 支持弱，bbox reward 要自己实现 |
-| TRL | ⭐⭐⭐ | DPO/GRPO 实现成熟，但 multi-reward server 要自己搭 |
-| veRL + LMDeploy | ⭐⭐⭐⭐⭐ | rollout 比 vllm 还快 30%，专门针对 GRPO 优化 |
+| **原生多模态早期融合** | 训练时图像/文本 token 从第 1 层就一起进 transformer | 视觉表征不是 bolt-on，训推一致性强 |
+| **DeepStack ViT 视觉编码器** | 多层 ViT 特征注入 LLM 各层 (`vision_config.deepstack_visual_indexes`) | 对 forensic 这种"细节像素证据"任务比 single-pool ViT 强一档 |
+| **Gated DeltaNet 75% + Full Attention 25%** 混合 | `layer_types: linear×3 → full×1` 重复 8 次 = 32 层 | 推理 O(L) 线性复杂度；RL rollout 比纯 transformer 快 2-3×；显存峰值低 |
+| **Multi-Token Prediction (MTP)** | `mtp_num_hidden_layers: 1` | 配合 speculative decoding 进一步加速 caption 生成 |
+| **262K 原生上下文** | `max_position_embeddings: 262144` | 长 caption + 完整证据 + reasoning trace 都装得下 |
+| **本地 BF16 18.6 GB** | 4 个 safetensors shard | 单卡 L20 (46GB) 装得下 base，5 卡 zero3 全参 RL 可行 |
 
-#### 10.5.5 期望收益与时间预算
+**Benchmark 对比**（HF 官方表，证明 9B Dense 打 30B-A3B MoE）：
 
-| 指标 | 当前 | OPD 后预期 | ΔS_Fin 贡献 |
-|---|---:|---:|---:|
-| S_Det | 0.9845 | 0.985 (基本饱和) | ~0 |
-| S_Loc | 0.8735 | **0.93** (DINOv3 + GroundingDINO 边界更准) | +0.014 |
-| S_Sim | 0.7552 | **0.85** (RL 拉对齐 GT 风格) | +0.014 |
-| S_Auto | 0.8582 | **0.92** (RL 直接优化 rubric) | +0.011 |
-| **S_Fin** | **0.9034** | **≈ 0.94** | **+0.04** |
+| Benchmark | Qwen3-VL-30B-A3B | **Qwen3.5-9B** | GPT-5-Nano | Gemini-2.5-Flash-Lite |
+|---|---:|---:|---:|---:|
+| MMMU | 76.0 | **78.4** | 75.8 | 73.4 |
+| MMMU-Pro | 63.0 | **70.1** | 57.2 | 59.7 |
+| MathVision | 65.7 | **78.9** | 62.2 | 52.1 |
+| OmniDocBench (与本任务最相关) | 79.4 | **87.7** | 55.9 | — |
+| HallusionBench | 66.0 | **69.3** | 58.4 | 64.5 |
+| CC-OCR | 77.8 | **79.3** | 58.9 | 72.9 |
 
-**时间**：8-10 天端到端（warmup 2 + specialist 2 + OPD 5）。
-**算力**：你 7 卡 L20 全开够用，但**最后 5 天会是 7 卡 24h 满载**，要确认热环境。
+**OmniDocBench 87.7 直接对标我们的"文档伪造判别 + 解释"业务**，这是任何 Qwen3-VL 系列都达不到的。
 
-#### 10.5.6 退一步：如果时间不够，最小可行 OPD
+#### 10.5.2 OPD 整体架构
 
-只做 RM-free 的 RFT（Rejection Fine-Tuning）：
-- 用现有 SegFormer + EfficientNet + qwen-max 做 reward
-- 让 Qwen3.5-9B (现有) 一次 sample 8 个 candidate caption
-- 选 reward top-1 当新的 SFT 样本
-- 重新 SFT 一轮（相当于 best-of-N + distillation）
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│  TEACHER (蒸馏源，frozen)                                            │
+│   选 1: Qwen3.6-27B (2026-04-22 发布, dense)                         │
+│   选 2: Qwen3.5-122B-A10B (A10B 激活, FSDP zero3 + offload 可装)     │
+│   选 3: DashScope qwen3-vl-max API (零本地负担, ¥0.4/调用)           │
+└────────────────────────┬────────────────────────────────────────────┘
+                         │ 输出 token-level logit dist + reasoning
+                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  STUDENT (policy, 我们要训的)                                         │
+│   Qwen3.5-9B 全参 SFT → GKD on-policy distillation                  │
+│   ↓ rollout n=8 candidates / sample (vllm 0.11+)                    │
+└────────────────────────┬────────────────────────────────────────────┘
+                         │ candidate caption + bbox extraction
+                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  REWARD = α·R_loc + β·R_cls + γ·R_cap + δ·R_bbox                    │
+│                                                                      │
+│   R_loc   ←  DINOv3-ViT-L (2025-08, Meta) + Mask2Former-light       │
+│              7-channel adapter (RGB+ELA+SRM)                         │
+│              替代 SegFormer-B5，ImageNet 监督 → SSL frozen 强一档    │
+│                                                                      │
+│   R_cls   ←  SigLIP-2-So400m-NaFlex (2025-02, Google)               │
+│              NaFlex 保留 native aspect (收据/小票/电商图非方形)      │
+│              超过 EVA-CLIP / AIMv2                                   │
+│                                                                      │
+│   R_cap   ←  GRM (Generative Reward Model, DeepSeek-V4 同款)        │
+│              actor 自评 rubric → 每 50 step 用 qwen-max 校准 10 张  │
+│                                                                      │
+│   R_bbox  ←  SAM 3.1 (2026-03-27, Meta, ICLR 2026)                  │
+│              caption 中 phrase 当 prompt → 验证 bbox 是否真在那里   │
+│              替代 Grounding DINO + SAM2 双模型                       │
+│                                                                      │
+│   + Forensic 专项: MaskCLIP / Mesorch (NeXT-IMDL benchmark 王者)    │
+└────────────────────────┬────────────────────────────────────────────┘
+                         │ 多 specialist reward 融合
+                         ▼
+┌─────────────────────────────────────────────────────────────────────┐
+│  EOPD UPDATE (Entropy-Aware OPD)                                     │
+│    high-entropy token → forward KL (防 mode collapse)                │
+│    low-entropy token  → reverse KL (DeepSeek-V4 默认，收敛快)        │
+│    + sentence-level importance sampling clip                         │
+│      (Qwen3 issue #1799 已报告无 clip 训练崩溃，必须加)              │
+└─────────────────────────────────────────────────────────────────────┘
+```
 
-这套 **3 天能完成**，期望 ΔS_Fin ≈ +0.015。是 OPD 的退化版，工程量低 5×。
+#### 10.5.3 Specialist 模型选型（基于 2025-2026 真实 SOTA）
+
+| 角色 | v1 baseline | **v2-opd 选型** | 来源 + 选型理由 |
+|---|---|---|---|
+| **Policy LM** | Qwen3.5-9B + LoRA r=64 SFT | **Qwen3.5-9B 全参** + GKD/EOPD（teacher = Qwen3.6-27B） | 本地权重已就位；同模型不换；从 LoRA 升级到全参以充分释放容量；teacher 选 Qwen3.6-27B（2026-04-22 发布，dense，6 卡 zero3 装得下）|
+| **像素 specialist (loc)** | SegFormer-B5 5-fold | **DINOv3-ViT-L** (蒸馏自 7B) + 7ch stem adapter + Mask2Former-light head | [arXiv 2508.10104](https://arxiv.org/abs/2508.10104) (Meta, 2025-08-14)；首次单一 frozen SSL backbone 在 dense prediction 超 SegFormer 类专门方案；Gram anchoring 解决长训练 dense feature 退化（解释了我们 v1 SegFormer 100 epoch 后 IoU 0.62 上不去）；商业许可 |
+| **图像 specialist (cls)** | EfficientNet-V2-L 5-fold | **SigLIP-2-So400m-NaFlex** (400M) + MLP head | [arXiv 2502.14786](https://arxiv.org/abs/2502.14786) (Google, 2025-02-20)；NaFlex 保留 native aspect ratio（我们 4 张 FP 全是热敏小票，aspect ≈ 0.3，方形 resize 把关键信号丢光）；caption-pretrain + masked-prediction → dense + 语义双强；超 EVA-CLIP / AIMv2 |
+| **Forensic SOTA specialist** | 没有 | **MaskCLIP**（IML-ViT-style，CLIP backbone）+ **Mesorch**（macro/meso/micro）双路 | [NeXT-IMDL benchmark (2025-12)](https://arxiv.org/abs/2512.23374) 跨域 F1: MaskCLIP 0.32 vs IML-ViT 0.12 vs TruFor 0.13 vs Mesorch 0.10 → MaskCLIP 是当前 forensic 跨域王者；ForensicHub (NeurIPS 2025) 有现成代码 |
+| **Bbox grounding verifier** | 无 | **SAM 3.1** (2026-03-27) | [SAM 3 ICLR 2026](https://ai.meta.com/research/sam3/)；单模型 PCS：text phrase 直接出 mask；零样本 LVIS AP 48.8 vs SAM2 38.5；30ms / 100+ objects on H200；3.1 加 shared-memory 多目标更快；替代我之前错推的 Grounding DINO 1.5 + SAM2 双模型 |
+| **Caption rubric reward** | qwen-max（评测时用） | **GRM** + qwen-max 校准 | DeepSeek-V4 同款 GRM；actor 自己生成 rubric 评分 → 不用每个 rollout 都调 API（¥0.4/张 × 8 rollouts × 800 step = ¥2560 太贵）；只在 step % 50 抽 10 样本调 qwen-max 校准 GRM 漂移 |
+| **OPD 算法** | LoRA SFT (token-CE) | **EOPD** + sentence-level IS clip + low_var_kl | [Entropy-Aware OPD (2603.07079)](https://arxiv.org/abs/2603.07079)；[Qwen3 issue #1799](https://github.com/QwenLM/Qwen3/issues/1799) 报告无 clip 时 OPD 训练 collapse → 必须加 |
+
+#### 10.5.4 训练栈 — ms-swift 主，verl 备
+
+```bash
+# ms-swift 路线 (issue #8182 已在 Qwen3-VL-8B 上跑通同样配置)
+swift rlhf --rlhf_type gkd \
+    --model models/Qwen3.5-9B \                  # 我们本地的
+    --teacher_model Qwen/Qwen3.6-27B \            # 下载新 teacher
+    --tuner_type full \                           # 全参，不上 LoRA
+    --beta 1 --lmbda 1 \                          # 全 on-policy GKD
+    --use_vllm true --vllm_mode server \
+    --deepspeed zero3 \
+    --teacher_deepspeed zero3 \
+    --max_length 16384 --max_completion_length 4096 \
+    --learning_rate 1e-5 \
+    --gradient_accumulation_steps 8
+
+# verl 路线 (备选)
+# 注意: Qwen3.5 Gated DeltaNet 需要 vllm>=0.11 + causal-conv1d 库;
+# verl main 分支 Qwen3-VL 已支持但 Qwen3.5 需自行验证 vllm rollout 路径
+```
+
+#### 10.5.5 7×L20 (GPU 0 坏，6×46GB=276GB) 算力分配 — 激进版
+
+```
+═════════════════════════════════════════════════════════════════════════
+阶段 0 (准备, 0.5 天)                                                  
+─────────────────────────────────────────────────────────────────────────
+- 下载 Qwen3.6-27B (~52 GB BF16) 到 NFS                               
+- 下载 DINOv3-ViT-L / SigLIP-2-So400m-NaFlex / SAM 3.1 / MaskCLIP     
+- pip install ms-swift (latest), vllm>=0.11, causal-conv1d, 升级 transformers ≥ 4.57
+                                                                       
+═════════════════════════════════════════════════════════════════════════
+阶段 1 (SFT warmup + specialist 训练, 3 天)                            
+─────────────────────────────────────────────────────────────────────────
+GPU 1-4: Qwen3.5-9B 全参 SFT (deepspeed zero3 + flash-attn 3 +        
+         grad_ckpt)；4 卡 18GB 模型 zero3 切到 < 25GB/卡；             
+         数据 = caption_api_v3 1600 + train_resume 800 + real_ext 1100
+         + v2 数据增强 (synth_v2, 见下面)；batch=1/卡, grad_accum=8    
+                                                                       
+GPU 5: DINOv3-ViT-L + 7ch adapter + Mask2Former 5-fold (轮转)         
+GPU 6: SigLIP-2-So400m + cls head 5-fold + MaskCLIP fine-tune (并发)  
+GPU 7: Mesorch (macro/meso/micro) + SAM 3.1 prompt-tuning             
+       (用 GT mask 当 weak label 校准 phrase embedding)                
+                                                                       
+═════════════════════════════════════════════════════════════════════════
+阶段 2 (GRM 训练 + DPO warmup, 1 天)                                  
+─────────────────────────────────────────────────────────────────────────
+- 用 qwen-max 给 800 张训练样本各打 4 维度 rubric → SFT GRM head      
+- 用 specialists 给每张 sample 8 candidate captions → 排序当 chosen/rejected
+- DPO 跑 1 轮稳定 (避免直接 GRPO collapse)                             
+                                                                       
+GPU 1-4: Qwen3.5-9B DPO (FSDP zero3)                                  
+GPU 5: GRM head 训练 (基于 Qwen3.5-9B body)                            
+GPU 6-7: 异步 qwen-max API 调用收集 rubric 数据                        
+                                                                       
+═════════════════════════════════════════════════════════════════════════
+阶段 3 (GKD/OPD 在线训练, 5-7 天，最关键)                              
+─────────────────────────────────────────────────────────────────────────
+┌── student (Qwen3.5-9B) actor + ref ────────────────────────┐         
+│  GPU 1,2: actor FSDP zero3                                 │         
+│  GPU 3:    ref model frozen, param_offload                 │         
+└────────────┬───────────────────────────────────────────────┘         
+             │                                                          
+┌── teacher (Qwen3.6-27B) frozen ────────────────────────────┐         
+│  GPU 4: teacher FSDP zero3 + offload                       │         
+│  (或 vllm tensor_parallel=2 跨 GPU 4,5)                    │         
+└────────────┬───────────────────────────────────────────────┘         
+             │ teacher logits + student rollout                          
+             ▼                                                          
+┌── rollout engine ──────────────────────────────────────────┐         
+│  GPU 5: vllm 0.11+ Qwen3.5-9B (Gated DeltaNet 适配版本)    │         
+│  n=8 candidates/sample, batch=4                            │         
+└────────────┬───────────────────────────────────────────────┘         
+             │ 8 candidate captions                                      
+             ▼                                                          
+┌── reward server (常驻) ────────────────────────────────────┐         
+│  GPU 6: DINOv3 (loc) + SigLIP-2 (cls) + MaskCLIP (forensic)│         
+│         三 specialist colocate, lmdeploy 推理              │         
+│  GPU 7: SAM 3.1 (bbox verify) + GRM (caption rubric)       │         
+│         + 异步 qwen-max API call 校准 (每 50 step 抽 10 张)│         
+└────────────┬───────────────────────────────────────────────┘         
+             │ R = α·R_loc + β·R_cls + γ·R_cap + δ·R_bbox + ε·R_forensic
+             ▼                                                          
+   EOPD update (high-entropy → FKL, low-entropy → RKL)                 
+   + sentence-level IS clip (low_var_kl)                                
+                                                                       
+预算: 80 step / day × 7 天 = 560 step ≈ 2 epoch                       
+═════════════════════════════════════════════════════════════════════════
+```
+
+#### 10.5.6 关键工程要点
+
+1. **Qwen3.5 Gated DeltaNet 推理基础设施**：必须 `vllm>=0.11` + `causal-conv1d` 库；transformers 必须 ≥ 4.57.0；ms-swift / verl 都需要确认 Qwen3.5 适配（issue #8182 显示 Qwen3-VL-8B OPD 已通，Qwen3.5 同栈大概率可，但要 dry-run 验证）。
+2. **不要把 reward server 跟 rollout 放同卡** — verl/OpenRLHF 实测同卡 OOM；必须分离 colocation。
+3. **Specialist 用 vllm/lmdeploy 推理**（不用 transformers）— DINOv3 + SigLIP-2 + SAM 3.1 + MaskCLIP 在 lmdeploy 上 throughput 5×。
+4. **GRM 替代 qwen-max 在线调用** — DeepSeek-V4 同款；qwen-max ¥0.4/调用 × 8 rollout × 560 step = ¥1792，用 GRM 自评 + 周期校准能压到 ¥150。
+5. **DPO 必须先于 GKD/GRPO** — 直接上 GKD 会 mode collapse（[Qwen3 #1799](https://github.com/QwenLM/Qwen3/issues/1799) 实证）；先用 specialist 排 N=8 rollouts 出 chosen/rejected pair 跑 1 轮 DPO 稳定 logit dist 再切 GKD。
+6. **全参 RL 而非 LoRA** — Qwen3.5-9B 18GB 全参 + FSDP zero3 + offload 在 4-5 卡 L20 完全装得下；全参比 LoRA 学到的 forensic reasoning 强一档。
+
+#### 10.5.7 期望收益与时间预算
+
+| 指标 | v1 SFT | **v2 OPD 预期** | 改善来源 |
+|---|---:|---:|---|
+| S_Det | 0.9845 | 0.99 | MaskCLIP forensic specialist + SigLIP-2 cls 互相纠错 |
+| S_Loc | 0.8735 | **0.92-0.94** | DINOv3 dense feature + SAM 3.1 边界精修 + 数字篡改专训 |
+| S_Sim | 0.7552 | **0.86-0.88** | EOPD 拉对齐 GT 风格 + Qwen3.5 OmniDocBench 87.7 底子强 |
+| S_Auto | 0.8582 | **0.93-0.95** | GRM 直接优化 rubric + qwen-max 周期校准 |
+| **S_Fin** | **0.9034** | **≈ 0.945-0.955** | **+0.04-0.05** |
+
+**总时间**：10-12 天端到端（准备 0.5 + 阶段 1 三天 + 阶段 2 一天 + 阶段 3 七天）。
+**算力**：7 卡 L20 全开，最后 7 天 24h 满载。
+
+#### 10.5.8 退化版：3 天能完成的 GKD-only 方案
+
+不上 specialist OPD 全套，只做最简 GKD（Qwen3.5-9B student ← Qwen3.6-27B teacher）：
+
+```bash
+swift rlhf --rlhf_type gkd \
+    --model models/Qwen3.5-9B \
+    --teacher_model Qwen/Qwen3.6-27B \
+    --dataset our_caption_data.jsonl \
+    --beta 1 --lmbda 1 \              # 全 on-policy
+    --tuner_type full \
+    --use_vllm true \
+    --deepspeed zero3 --teacher_deepspeed zero3
+```
+
+3 天可完成，期望 ΔS_Fin ≈ +0.020（不如全 OPD 的 +0.04，但工程量小一档）。**适合作为 v2-opd 分支的 milestone-0**：先验证基础设施跑通，再上完整 specialist OPD。
 
 ### 10.6 GPU 0 ECC 错误
 
@@ -1007,13 +1115,107 @@ F1=0.9846 Precision=0.9697 Recall=1.000 Acc=0.9750 mean IoU=0.8160 mean Dice=0.8
 
 ---
 
-## 致谢与依赖
+## 十五、v2-opd 实施计划（当前分支工作分解）
 
-- **基座模型**：SegFormer-B5 (NVIDIA) / EfficientNet-V2 / Qwen3.5-9B (Alibaba) / qwen-vl-max
-- **校准器**：XGBoost / scikit-learn / LightGBM / **TabPFN-2.5 (Prior Labs)** / interpret
-- **评分**：bert-score / dashscope (Qwen3-MAX)
-- **数据增强参考**：COCO val2017（真实负例补齐）
+> **本节仅在 `v2-opd` 分支有效，main 分支为 v1.0-sft-baseline。**
+> 设计文档见 §10.5（specialist OPD），数据问题分析见 §3.4。
+
+### 15.1 目标
+
+把 v1.0 baseline `S_Fin = 0.9034` 推到 `S_Fin ≈ 0.945-0.955`（+0.04-0.05）。核心手段是**用 DeepSeek-V4 风格的 multi-specialist OPD 替换 SFT-only**，同时配套数据增强补齐 v1 暴露的瓶颈。
+
+### 15.2 工作分解（12 天，按 milestone）
+
+| Milestone | 时间 | 可交付物 | 验证标准 |
+|---|---|---|---|
+| **M0 · 准备 + 数据增强 v2** | Day 1-2 | `tools/synth_v2/` 4 个脚本（数字篡改 / 真实小票 / 易误判精修 / 全图 AIGC）+ 新数据落地 `data/processed/synth_v2/` 与 `data/processed/real_ext_v2/` | guard.py --strict 通过；新增 600+ 张数据，类型分布 cover §3.4.5 四个真问题 |
+| **M1 · 基础设施** | Day 2-3 | `swift>=3.x` + `vllm>=0.11` + `causal-conv1d` 装好；Qwen3.6-27B teacher / DINOv3-ViT-L / SigLIP-2-So400m / SAM 3.1 / MaskCLIP 全部下载到 `models/`；smoke test 跑通 swift gkd 命令（即使 1 step） | `python -c "import vllm; vllm.LLM('models/Qwen3.5-9B').generate('test')"` 跑出 |
+| **M2 · GKD-only baseline** | Day 4-5 | §10.5.8 退化版方案跑通：Qwen3.5-9B ← Qwen3.6-27B 全 on-policy GKD；新 LoRA / 全参 ckpt 落 `checkpoints/qwen35_9b_gkd/` | val 200 张全流水线 + score_official.py → `S_Fin ≥ 0.92`（vs v1.0 的 0.9034） |
+| **M3 · Specialist 训练** | Day 5-7 | DINOv3 5-fold（替代 SegFormer）/ SigLIP-2 5-fold（替代 EffNet）/ MaskCLIP / Mesorch / SAM 3.1 prompt-tuning 全部落 `checkpoints/specialists/` | 单独 forensic ablation：MaskCLIP cross-domain F1 ≥ 0.30（NeXT-IMDL benchmark）；DINOv3 val Dice ≥ 0.90 |
+| **M4 · GRM + DPO warmup** | Day 8 | GRM head（基于 Qwen3.5-9B body）训练完；DPO warmup 一轮稳定 logit dist | GRM 与 qwen-max 在 50 张抽样上偏差 ≤ 0.08；DPO 后 GKD val 不下降 |
+| **M5 · Specialist OPD 在线** | Day 9-12 | 完整 EOPD + sentence-level IS clip + multi-reward 跑 ≥ 80 step/day × 4 天 ≈ 320 step；新 ckpt 落 `checkpoints/qwen35_9b_opd/` | val 200 张 → `S_Fin ≥ 0.94`，`S_Auto ≥ 0.92`，`S_Loc ≥ 0.92` |
+| **M6 · 端到端验证 + 替换 main** | Day 13 | test 500 张推理 + submit_v2.csv；ablation 表跑全（`logs/ablation_v2.md`）；Pull Request `v2-opd → main` | 三项指标都不退步；CI guard.py 通过；PR 描述写明 ΔS_Fin |
+
+### 15.3 风险与回退方案
+
+| 风险 | 概率 | 影响 | 回退方案 |
+|---|---|---|---|
+| Qwen3.5 Gated DeltaNet 在 vllm 0.11 / ms-swift 上 rollout 不通 | 中 | 阻塞 M3-M5 | 退回 verl + transformers 原生 sample（慢但能跑） |
+| GKD/EOPD 训练 collapse（Qwen3 #1799 现象） | 中 | M2/M5 失败 | 必加 sentence-level IS clip + reward clip + DPO warmup |
+| Qwen3.6-27B teacher 显存不够（FSDP zero3 + offload 仍 OOM） | 低 | M2 阻塞 | 切换到 Qwen3.5-122B-A10B（A10B 激活只占 ~20GB）或 DashScope API teacher |
+| Reward server 与 rollout 同卡 OOM | 高 | M5 阻塞 | 严格分卡 colocation（已计入 §10.5.5 算力图） |
+| 数据增强 v2 后 forensic specialist 在新分布上反而更差 | 低 | M3 退化 | A/B 比对：先在原分布上验证 specialist 不退步再合数据 |
+| 12 天跑不完 | 高 | 不能替换 main | 跑到 M2 / M3 也是有效成果（GKD-only 即可拿 +0.02 ΔS_Fin），按 milestone 部分合并 |
+
+### 15.4 v2-opd 分支的代码组织
+
+```
+TFI/  (v2-opd branch)
+├── README.md                           ← 本文件 (含 §10.5 + §15)
+├── v1 部分 (不动 / 与 main 一致):
+│   ├── train_seg_ensemble.py           # SegFormer baseline (M3 后会冻结)
+│   ├── train_classifier.py             # EffNet baseline (M3 后会冻结)
+│   ├── train_calibrator.py             # XGB calibrator (复用)
+│   ├── train_qwen35_9b.py              # v1 LoRA SFT (保留对照)
+│   ├── inference.py / evaluate.py / score_official.py
+│
+├── v2 新增:
+│   ├── tools/synth_v2/
+│   │   ├── synth_number_tampering.py   # M0: 数字篡改专项 200 张
+│   │   ├── import_receipt_real.py      # M0: 真实热敏小票 200 张
+│   │   ├── synth_easy_fp.py            # M0: 易误判精修真实图 100 张
+│   │   └── gen_aigc_full.py            # M0: 整图 AIGC 200 张 (鲁棒性测试集)
+│   │
+│   ├── train_specialists/
+│   │   ├── train_dinov3_loc.py         # M3: DINOv3 + 7ch + Mask2Former
+│   │   ├── train_siglip2_cls.py        # M3: SigLIP-2-So400m + cls
+│   │   ├── train_maskclip_forensic.py  # M3: MaskCLIP NeXT-IMDL 配方
+│   │   └── tune_sam3_phrase.py         # M3: SAM 3.1 phrase prompt 微调
+│   │
+│   ├── train_grm.py                    # M4: GRM head 训练
+│   ├── train_dpo_warmup.py             # M4: DPO 一轮稳定
+│   │
+│   ├── opd/
+│   │   ├── reward_server.py            # M5: 多 specialist reward 融合 server
+│   │   ├── eopd_trainer.py             # M5: Entropy-Aware OPD trainer (基于 ms-swift)
+│   │   └── run_opd.sh                  # M5: 一键启动
+│   │
+│   └── checkpoints/
+│       ├── specialists/
+│       │   ├── dinov3_loc/             # 5 fold
+│       │   ├── siglip2_cls/            # 5 fold
+│       │   ├── maskclip_forensic/
+│       │   ├── mesorch/
+│       │   └── sam3_phrase_tuned/
+│       ├── qwen35_9b_gkd/              # M2 退化版
+│       ├── qwen35_9b_dpo/              # M4
+│       └── qwen35_9b_opd/              # M5 最终
+```
 
 ---
 
-> **最后更新：2026-04-28**，对应 commit 见 `git log`。新增 §七 TabPFN 对比、§十三 面试问答、§十四 速查表。
+## 致谢与依赖
+
+**v1.0 SFT baseline**
+- 基座模型：SegFormer-B5 (NVIDIA) / EfficientNet-V2 / Qwen3.5-9B (Alibaba) / qwen-vl-max
+- 校准器：XGBoost / scikit-learn / LightGBM / **TabPFN-2.5 (Prior Labs)** / interpret
+- 评分：bert-score / dashscope (Qwen3-MAX)
+- 数据增强参考：COCO val2017（真实负例补齐）
+
+**v2-opd 新增依赖（设计中，详见 §10.5 / §15）**
+- Policy / Teacher：[Qwen3.5-9B](https://huggingface.co/Qwen/Qwen3.5-9B) (2026-03) / [Qwen3.6-27B](https://huggingface.co/Qwen/Qwen3.6) (2026-04)
+- Vision specialists：
+    - [DINOv3-ViT-L (Meta, 2025-08, arXiv 2508.10104)](https://arxiv.org/abs/2508.10104) — loc backbone
+    - [SigLIP-2-So400m-NaFlex (Google, 2025-02, arXiv 2502.14786)](https://arxiv.org/abs/2502.14786) — cls backbone
+    - [SAM 3.1 (Meta, 2026-03, ICLR 2026)](https://ai.meta.com/research/sam3/) — bbox phrase verifier
+    - [MaskCLIP / Mesorch (NeXT-IMDL benchmark, arXiv 2512.23374)](https://arxiv.org/abs/2512.23374) — forensic specialists
+- RL/OPD 框架：[ms-swift (ModelScope)](https://github.com/modelscope/ms-swift) 主 / [verl (字节)](https://github.com/volcengine/verl) 备
+- 推理引擎：[vllm ≥ 0.11](https://github.com/vllm-project/vllm) / [LMDeploy](https://github.com/InternLM/lmdeploy)
+- OPD 算法：[Entropy-Aware OPD (arXiv 2603.07079)](https://arxiv.org/abs/2603.07079) + sentence-level IS clip
+- 参考实现：[Qwen3-VL-8B GKD on ms-swift #8182](https://github.com/modelscope/ms-swift/issues/8182)
+
+---
+
+> **最后更新：2026-04-29**（v2-opd 分支创建）。
+> - **main / v1.0-sft-baseline**：稳定 5-stage SFT 流水线，S_Fin = 0.9034。
+> - **v2-opd（当前）**：DeepSeek-V4 风格 specialist OPD 大改造，目标 S_Fin ≈ 0.945-0.955，详见 §10.5 + §15。
