@@ -1,0 +1,19 @@
+{
+  "row": {
+    "image_name": "fafbe61184e540a88190d93864b50229.jpg",
+    "label": 0,
+    "location": "{\"size\":[1897,791],\"counts\":\"_[i]1\"}",
+    "explanation": "这是一张真实拍摄的热敏小票，内容清晰，包含商家信息、交易明细、支付方式和日期等。图像整体呈现出热敏纸特有的灰白色调和轻微噪点，边缘有自然的阴影和弯曲，符合手持拍摄或放置在平面上的物理特征。文字排列整齐，字体为标准的点阵式热敏打印字体，没有明显的像素错位或AI生成的伪影。交易明细部分，SUBTOTAL为22.44，ROUNDING ADJUSTMENTS为1.61，TOTAL (GST INCL)为96.5，VISA Card支付，Trace No. 016036，CARD NO. 461772******2105，YOUR SAVINGS FOR TODAY为6.229。底部有Thank You For Shopping以及免责声明，日期为01/01/18。所有数字和文字的逻辑关系正常，没有明显的篡改痕迹。小票顶部的RECEIPT字样虽然有些模糊，但符合热敏纸打印特征。底部的条形码和数字35300 Ctr ID:2005 Taxinv:59488 41668也是热敏打印的典型特征。没有发现拼接、复制粘贴或AI生成的痕迹。综合分析，该图像真实记录了Guardian Health and Beauty Sdn Bhd在2018年1月1日的购物交易场景。"
+  },
+  "raw": "这是一张真实拍摄的热敏小票（receipt），内容清晰，包含商家信息、交易明细、支付方式和日期等。\n1.  **图像质量与特征**：图像整体呈现出热敏纸特有的灰白色调和轻微噪点，边缘有自然的阴影和弯曲，符合手持拍摄或放置在平面上的物理特征。\n2.  **文字内容**：文字排列整齐，字体为标准的点阵式热敏打印字体，没有明显的像素错位或AI生成的伪影。\n3.  **逻辑一致性**：\n    *   商家名称 \"Guardian Health and Beauty Sdn Bhd\" 与地址 \"SALAKS JAYA KUALA\" 等信息符合马来西亚Guardian药妆店的常见格式。\n    *   交易明细部分，\"SUBTOTAL\" 为 22.44，\"ROUNDING ADJUSTMENTS\" 为 1.61，\"TOTAL (GST INCL)\" 为 96.5，\"VISA Card\" 支付，\"Trace No. 016036\"，\"CARD NO. 461772******2105\"，\"YOUR SAVINGS FOR TODAY\" 为 6.229。\n    *   底部有 \"Thank You For Shopping\" 以及免责声明，日期为 \"01/01/18\"。\n    *   所有数字和文字的逻辑关系正常，没有明显的篡改痕迹（如金额被修改、日期被替换等）。\n4.  **细节检查**：\n    *   小票顶部的 \"RECEIPT\" 字样虽然有些模糊，但符合热敏纸打印特征。\n    *   底部的条形码和数字 \"35300 Ctr ID:2005 Taxinv:59488 41668\" 也是热敏打印的典型特征。\n    *   没有发现拼接、复制粘贴或AI生成的痕迹。\n\n结论：这是一张真实拍摄的热敏小票，未发现伪造痕迹。\n</think>\n\n{\n  \"label\": 0,\n  \"location\": [],\n  \"explanation\": \"这是一张真实拍摄的热敏小票，内容清晰，包含商家信息、交易明细、支付方式和日期等。图像整体呈现出热敏纸特有的灰白色调和轻微噪点，边缘有自然的阴影和弯曲，符合手持拍摄或放置在平面上的物理特征。文字排列整齐，字体为标准的点阵式热敏打印字体，没有明显的像素错位或AI生成的伪影。交易明细部分，SUBTOTAL为22.44，ROUNDING ADJUSTMENTS为1.61，TOTAL (GST INCL)为96.5，VISA Card支付，Trace No. 016036，CARD NO. 461772******2105，YOUR SAVINGS FOR TODAY为6.229。底部有Thank You For Shopping以及免责声明，日期为01/01/18。所有数字和文字的逻辑关系正常，没有明显的篡改痕迹。小票顶部的RECEIPT字样虽然有些模糊，但符合热敏纸打印特征。底部的条形码和数字35300 Ctr ID:2005 Taxinv:59488 41668也是热敏打印的典型特征。没有发现拼接、复制粘贴或AI生成的痕迹。综合分析，该图像真实记录了Guardian Health and Beauty Sdn Bhd在2018年1月1日的购物交易场景。\"\n}\n",
+  "parsed": {
+    "label": 0,
+    "location": [],
+    "explanation": "这是一张真实拍摄的热敏小票，内容清晰，包含商家信息、交易明细、支付方式和日期等。图像整体呈现出热敏纸特有的灰白色调和轻微噪点，边缘有自然的阴影和弯曲，符合手持拍摄或放置在平面上的物理特征。文字排列整齐，字体为标准的点阵式热敏打印字体，没有明显的像素错位或AI生成的伪影。交易明细部分，SUBTOTAL为22.44，ROUNDING ADJUSTMENTS为1.61，TOTAL (GST INCL)为96.5，VISA Card支付，Trace No. 016036，CARD NO. 461772******2105，YOUR SAVINGS FOR TODAY为6.229。底部有Thank You For Shopping以及免责声明，日期为01/01/18。所有数字和文字的逻辑关系正常，没有明显的篡改痕迹。小票顶部的RECEIPT字样虽然有些模糊，但符合热敏纸打印特征。底部的条形码和数字35300 Ctr ID:2005 Taxinv:59488 41668也是热敏打印的典型特征。没有发现拼接、复制粘贴或AI生成的痕迹。综合分析，该图像真实记录了Guardian Health and Beauty Sdn Bhd在2018年1月1日的购物交易场景。"
+  },
+  "gt_label": 1,
+  "image_size": [
+    791,
+    1897
+  ]
+}

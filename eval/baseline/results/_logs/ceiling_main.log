@@ -1,0 +1,21 @@
+[ceiling] using model: /home/young/TFI/models/Qwen3.6-27B
+===== [SKIP] zs: /home/young/TFI/tools/baseline/results_qwen36/zs/predictions.csv exists (delete to force rerun) =====
+===== [SKIP] cot: /home/young/TFI/tools/baseline/results_qwen36/cot/predictions.csv exists (delete to force rerun) =====
+
+===== ceiling inference DONE =====
+Outputs:
+  /home/young/TFI/tools/baseline/results_qwen36/zs/predictions.csv
+  /home/young/TFI/tools/baseline/results_qwen36/cot/predictions.csv
+
+Next: 加入 judge 对比（GPU 4-7 TP=4，70B judge 已就位）
+
+python tools/baseline/judge_absolute_scoring.py \
+    --pred_csvs sft="/home/young/TFI/submit_val.csv" \
+                zs="/home/young/TFI/tools/baseline/results/zs/predictions.csv" \
+                cot="/home/young/TFI/tools/baseline/results/cot/predictions.csv" \
+                qwen36_zs="/home/young/TFI/tools/baseline/results_qwen36/zs/predictions.csv" \
+                qwen36_cot="/home/young/TFI/tools/baseline/results_qwen36/cot/predictions.csv" \
+    --judge_model /mnt/nfs/young/TFI/judge_model/r1-distill-llama-70b \
+    --gpus 4,5,6,7 \
+    --out_dir tools/baseline/results/judge \
+    2>&1 | tee "/home/young/TFI/tools/baseline/results/_logs/judge_with_ceiling.log"

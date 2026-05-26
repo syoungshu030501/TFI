@@ -1,0 +1,38 @@
+{
+  "row": {
+    "image_name": "4409ddcd8f1641f6843e56a23f156855.jpg",
+    "label": 1,
+    "location": "{\"size\":[960,1280],\"counts\":\"l]m:Z1fl0000000000000000000000000000000000000000000000[K:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFPe0:P[OFei0000000000000000000000000000000000000000000000000000000000TdW`0\"}",
+    "explanation": "这是一份伪造的建筑外墙照片，其中包含两行后期添加的文字。上方文字“AMUUL OLFEPP”位于坐标 [396, 551, 696, 603]，下方文字“AVE 1874 - UROGRAPHICS - VIMY”位于坐标 [372, 700, 725, 742]。这两行文字在视觉上与墙面缺乏物理融合，边缘过于锐利，且未投射相应的阴影，呈现出典型的数字合成特征。上方文字内容“AMUUL OLFEPP”语义不明，极可能是伪造者随意拼凑的字符。下方文字虽然包含地址格式，但整体排版和字体风格与上方文字一致，进一步证实了它们是同一来源的后期添加元素。背景中的白色墙面纹理自然，但文字区域明显是后期叠加的。综上所述，该图像系数字合成，不具备真实性与可信度。"
+  },
+  "raw": "该图像显示了一栋白色建筑的外墙，上面有两行文字。\n1.  **上方文字**：位于坐标 [396, 551, 696, 603] 附近，内容为 \"AMUUL OLFEPP\"。这看起来像是一个拼写错误或伪造的单词，因为 \"AMUUL\" 和 \"OLFEPP\" 并不是常见的英语单词或地名。\n2.  **下方文字**：位于坐标 [372, 700, 725, 742] 附近，内容为 \"AVE 1874 - UROGRAPHICS - VIMY\"。这看起来像是一个地址或公司名，但 \"UROGRAPHICS\" 这个词比较生僻，且整体排版和字体风格与上方文字一致。\n3.  **字体和材质**：两行文字看起来像是后期添加的，因为它们与墙面的融合度不高，边缘过于清晰，且没有明显的物理深度或阴影。字体风格统一，但内容看起来不自然。\n4.  **光照和阴影**：文字本身没有投射阴影到墙面上，这进一步表明它们是后期添加的。\n5.  **内容逻辑**： \"AMUUL OLFEPP\" 这个组合非常奇怪，极有可能是伪造的。下方的 \"AVE 1874 - UROGRAPHICS - VIMY\" 虽然看起来像地址，但结合上方的奇怪文字，整体图像的可信度降低。\n\n综合来看，这张图像很可能是通过图像编辑软件将文字叠加到背景图像上生成的。\n\n**结论**：这是一张伪造的图像。\n**伪造区域**：\n- 上方文字 \"AMUUL OLFEPP\"：[396, 551, 696, 603]\n- 下方文字 \"AVE 1874 - UROGRAPHICS - VIMY\"：[372, 700, 725, 742]\n\n**鉴定结论**：这是一份伪造的建筑外墙照片，其中包含两行后期添加的文字。上方文字 \"AMUUL OLFEPP\" 位于坐标 [396, 551, 696, 603]，下方文字 \"AVE 1874 - UROGRAPHICS - VIMY\" 位于坐标 [372, 700, 725, 742]。这两行文字在视觉上与墙面缺乏物理融合，边缘过于锐利，且未投射相应的阴影，呈现出典型的数字合成特征。上方文字内容 \"AMUUL OLFEPP\" 语义不明，极可能是伪造者随意拼凑的字符。下方文字虽然包含地址格式，但整体排版和字体风格与上方文字一致，进一步证实了它们是同一来源的后期添加元素。背景中的白色墙面纹理自然，但文字区域明显是后期叠加的。综上所述，该图像系数字合成，不具备真实性与可信度。\n</think>\n\n{\"label\": 1, \"location\": [{\"bbox\": [396, 551, 696, 603], \"type\": \"篡改\"}, {\"bbox\": [372, 700, 725, 742], \"type\": \"篡改\"}], \"explanation\": \"这是一份伪造的建筑外墙照片，其中包含两行后期添加的文字。上方文字“AMUUL OLFEPP”位于坐标 [396, 551, 696, 603]，下方文字“AVE 1874 - UROGRAPHICS - VIMY”位于坐标 [372, 700, 725, 742]。这两行文字在视觉上与墙面缺乏物理融合，边缘过于锐利，且未投射相应的阴影，呈现出典型的数字合成特征。上方文字内容“AMUUL OLFEPP”语义不明，极可能是伪造者随意拼凑的字符。下方文字虽然包含地址格式，但整体排版和字体风格与上方文字一致，进一步证实了它们是同一来源的后期添加元素。背景中的白色墙面纹理自然，但文字区域明显是后期叠加的。综上所述，该图像系数字合成，不具备真实性与可信度。\"}\n",
+  "parsed": {
+    "label": 1,
+    "location": [
+      {
+        "bbox": [
+          396,
+          551,
+          696,
+          603
+        ],
+        "type": "篡改"
+      },
+      {
+        "bbox": [
+          372,
+          700,
+          725,
+          742
+        ],
+        "type": "篡改"
+      }
+    ],
+    "explanation": "这是一份伪造的建筑外墙照片，其中包含两行后期添加的文字。上方文字“AMUUL OLFEPP”位于坐标 [396, 551, 696, 603]，下方文字“AVE 1874 - UROGRAPHICS - VIMY”位于坐标 [372, 700, 725, 742]。这两行文字在视觉上与墙面缺乏物理融合，边缘过于锐利，且未投射相应的阴影，呈现出典型的数字合成特征。上方文字内容“AMUUL OLFEPP”语义不明，极可能是伪造者随意拼凑的字符。下方文字虽然包含地址格式，但整体排版和字体风格与上方文字一致，进一步证实了它们是同一来源的后期添加元素。背景中的白色墙面纹理自然，但文字区域明显是后期叠加的。综上所述，该图像系数字合成，不具备真实性与可信度。"
+  },
+  "gt_label": 1,
+  "image_size": [
+    1280,
+    960
+  ]
+}

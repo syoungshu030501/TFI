@@ -1,0 +1,65 @@
+# TFI FIPO v1 hyperparameters (consumed by train/fipo/launch.sh as override
+# defaults — verl's own Hydra config tree owns the rest). Numbers track
+# README §一.9 "推荐超参 (TFI 短 CoT 场景)" 表 line-for-line.
+
+fipo:
+  # FIPO core (env vars consumed by train/fipo/verl_patches/future_kl_loss.py)
+  loss_mode: future_kl
+  decay_rate: 12.0
+  chunk_size: 128
+  future_kl_clip_ratio: 0.2
+  future_kl_clip_high_only: false
+  safety_thresh: 4.0
+
+  # Advantage estimator (grpo; FIPO replaces the policy-loss term, not adv calc)
+  adv_estimator: grpo
+
+  # KL (internalised by future_kl; external KL switched off)
+  use_kl_in_reward: false
+  kl_coef: 0.0
+
+  # PPO clipping
+  clip_ratio_low: 0.2
+  clip_ratio_high: 0.28
+  clip_ratio_c: 10.0
+
+  # Rollout — TFI output ~150 tok, prompt up to ~3k image tokens + text
+  n_resp_per_prompt: 8
+  max_prompt_length: 4096
+  max_response_length: 512
+  temperature: 1.0
+  top_p: 0.95
+  vllm_gpu_memory_utilization: 0.62
+  tensor_model_parallel_size: 1
+
+  # Optimiser (more conservative than VLM-posttraining 1e-6 — TFI prompts smaller)
+  lr: 1.0e-6
+  lr_warmup_steps: 10
+  total_epochs: 2
+  train_batch_size: 6
+  mini_batch_size: 3
+  micro_batch_size_per_gpu: 1
+
+  # Validation cadence
+  test_freq: 10
+  save_freq: 40
+
+# Reward weights (sum to 1.0). Override at compute_reward(weights=...) call site
+# or via TFI_REWARD_WEIGHTS env var (parsed by reward_manager — TODO).
+reward_weights:
+  format: 0.10
+  consistency: 0.10
+  label_gt: 0.15
+  iou_gt: 0.15
+  phrase_check: 0.05
+  loc: 0.10        # external (DINOv3) — 0 until specialist is wired
+  cls: 0.10        # external (SigLIP-2) — 0 until specialist is wired
+  forensic: 0.10   # external (MaskCLIP+Mesorch) — 0 until specialist is wired
+  grm: 0.10        # external (GRM) — 0 until rubric server is wired
+  qwen_periodic: 0.05  # external (qwen-max sampled every 50 steps)
+
+# Hardware: GPU 0 is OFF-LIMITS (historical ECC errors). launch.sh defaults
+# CUDA_VISIBLE_DEVICES=1,2,3,4,5,6,7 and N_GPUS=7 accordingly.
+hardware:
+  cuda_visible_devices: "1,2,3,4,5,6,7"
+  n_gpus: 7

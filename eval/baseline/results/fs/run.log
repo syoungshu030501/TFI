@@ -1,0 +1,26 @@
+[17:52:47] === prompt-only baseline | mode=fs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[17:52:47] val samples: 200 (forged=160, real=40)
+[17:52:48] fewshot pool: 8 (forged=4, real=4)
+[17:52:48] loading model + processor ...
+[17:52:56] model loaded on cuda, peak mem (alloc): 18.83GB
+[18:00:08] [10/200] elapsed=432s  avg=43.2s/sample
+[18:07:24] [20/200] elapsed=868s  avg=43.4s/sample
+[18:15:27] [30/200] elapsed=1351s  avg=45.0s/sample
+[18:24:56] [40/200] elapsed=1920s  avg=48.0s/sample
+[18:32:03] [50/200] elapsed=2347s  avg=46.9s/sample
+[18:38:50] [60/200] elapsed=2754s  avg=45.9s/sample
+[18:45:59] [70/200] elapsed=3183s  avg=45.5s/sample
+[18:52:37] [80/200] elapsed=3581s  avg=44.8s/sample
+[19:01:34] [90/200] elapsed=4118s  avg=45.8s/sample
+[19:09:45] [100/200] elapsed=4609s  avg=46.1s/sample
+[19:18:27] [110/200] elapsed=5131s  avg=46.6s/sample
+[19:26:22] [120/200] elapsed=5606s  avg=46.7s/sample
+[19:35:35] [130/200] elapsed=6159s  avg=47.4s/sample
+[19:42:24] [140/200] elapsed=6568s  avg=46.9s/sample
+[19:50:30] [150/200] elapsed=7054s  avg=47.0s/sample
+[19:59:02] [160/200] elapsed=7566s  avg=47.3s/sample
+[20:06:58] [170/200] elapsed=8042s  avg=47.3s/sample
+[20:14:36] [180/200] elapsed=8500s  avg=47.2s/sample
+[20:21:27] [190/200] elapsed=8911s  avg=46.9s/sample
+[20:28:13] [200/200] elapsed=9317s  avg=46.6s/sample
+[20:28:13] === DONE: /home/young/TFI/tools/baseline/results/fs/predictions.csv (n=200, total=9317s) ===

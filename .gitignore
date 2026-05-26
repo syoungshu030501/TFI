@@ -33,6 +33,19 @@ data/vlm/caption_api_v3
 !data/raw/README.md
 !data/processed/README.md
 
+# 训练数据 parquet（>100M，触发 GitHub 限制；可由 build 脚本重新生成）
+data/fipo/
+data/fipo_qwen35/
+data/preference/
+data/sft/
+
+# Claude Code 本地配置
+.claude/
+
+# vendored 第三方代码（独立 clone，不进主仓库）
+# 复现方法见 code/README.md
+code/verl/
+
 # ============================================================
 #  训练/推理产物
 # ============================================================

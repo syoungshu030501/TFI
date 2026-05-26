@@ -1,0 +1,25 @@
+[20:51:31] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/_cache_qwen36/Qwen/Qwen3.6-27B ===
+[20:51:31] val samples: 200 (forged=160, real=40)
+[20:51:31] loading model + processor ...
+[20:55:45] model loaded (device_map=auto, primary=cuda:0); per-GPU alloc: ['25.5GB', '29.2GB']
+[21:19:52] [10/200] elapsed=1447s  avg=144.7s/sample
+[21:45:13] [20/200] elapsed=2968s  avg=148.4s/sample
+[22:07:07] [30/200] elapsed=4282s  avg=142.7s/sample
+[22:31:57] [40/200] elapsed=5773s  avg=144.3s/sample
+[22:55:06] [50/200] elapsed=7161s  avg=143.2s/sample
+[23:17:06] [60/200] elapsed=8482s  avg=141.4s/sample
+[23:39:13] [70/200] elapsed=9808s  avg=140.1s/sample
+[00:02:06] [80/200] elapsed=11181s  avg=139.8s/sample
+[00:23:52] [90/200] elapsed=12487s  avg=138.7s/sample
+[00:47:25] [100/200] elapsed=13900s  avg=139.0s/sample
+[01:11:14] [110/200] elapsed=15330s  avg=139.4s/sample
+[01:34:23] [120/200] elapsed=16718s  avg=139.3s/sample
+[01:58:38] [130/200] elapsed=18173s  avg=139.8s/sample
+[02:23:29] [140/200] elapsed=19664s  avg=140.5s/sample
+[02:46:35] [150/200] elapsed=21050s  avg=140.3s/sample
+[03:10:57] [160/200] elapsed=22512s  avg=140.7s/sample
+[03:33:53] [170/200] elapsed=23889s  avg=140.5s/sample
+[03:56:09] [180/200] elapsed=25224s  avg=140.1s/sample
+[04:19:16] [190/200] elapsed=26611s  avg=140.1s/sample
+[04:42:22] [200/200] elapsed=27998s  avg=140.0s/sample
+[04:42:22] === DONE: /home/young/TFI/tools/baseline/results_qwen36/zs/predictions.csv (n=200, total=27998s) ===

@@ -1,0 +1,49 @@
+[load] preds  : eval/baseline/results/sft_v2_qwen35/predictions.csv
+        rows  : 200
+[load] val_dir: data/raw/val
+        n     : 200 (forged=160, real=40)
+
+=== S_Det (image-level F1) ===
+{
+  "f1": 0.6801618971364912,
+  "precision": 0.9655172402695205,
+  "recall": 0.524999999671875,
+  "accuracy": 0.6049999996975001
+}
+
+=== S_Loc (pixel-level F1 = Dice on forged) ===
+{
+  "pixel_f1": 0.2532337539097285,
+  "n_forged": 160
+}
+
+=== S_Sim (BERTScore-zh) ===
+Loading weights:   0%|          | 0/199 [00:00<?, ?it/s]Loading weights: 100%|██████████| 199/199 [00:00<00:00, 12294.40it/s]
+[1mBertModel LOAD REPORT[0m from: bert-base-chinese
+Key                                        | Status     |  | 
+-------------------------------------------+------------+--+-
+cls.predictions.transform.LayerNorm.weight | UNEXPECTED |  | 
+cls.predictions.bias                       | UNEXPECTED |  | 
+cls.predictions.transform.LayerNorm.bias   | UNEXPECTED |  | 
+cls.seq_relationship.weight                | UNEXPECTED |  | 
+cls.predictions.transform.dense.bias       | UNEXPECTED |  | 
+cls.seq_relationship.bias                  | UNEXPECTED |  | 
+cls.predictions.transform.dense.weight     | UNEXPECTED |  | 
+
+Notes:
+- UNEXPECTED:	can be ignored when loading from different task/architecture; not ok if you expect identical arch.
+  bertscore_f1=0.7077  n=200
+
+=== S_Auto (skipped) ===
+
+============================================================
+  S_Det = 0.6802
+  S_Loc = 0.2532
+  S_Sim = 0.7077
+  S_Auto= 0.0000
+  S_Exp = 0.3538  ( = 0.5*S_Auto + 0.5*S_Sim )
+  S_Fin = 0.4755  ( = 0.45*S_Det + 0.25*S_Loc + 0.30*S_Exp )
+============================================================
+
+[done] -> eval/baseline/results/sft_v2_qwen35/score/score.json
+        -> eval/baseline/results/sft_v2_qwen35/score/score.md

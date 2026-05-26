@@ -1,0 +1,1153 @@
+╭─── Claude Code v2.1.120 ─────────────────────────────────────────────────────╮
+│                                 │ Tips for getting started                   │
+│          Welcome back!          │ Run /init to create a CLAUDE.md file with… │
+│                                 │ Note: You have launched claude in your ho… │
+│             ▐▛███▜▌             │ ────────────────────────────────────────── │
+│            ▝▜█████▛▘            │ Recent activity                            │
+│              ▘▘ ▝▝              │ No recent activity                         │
+│                                 │                                            │
+│   glm-5.1 · API Usage Billing   │                                            │
+│         C:\Users\17493          │                                            │
+╰──────────────────────────────────────────────────────────────────────────────╯
+
+> /model                                                                        
+  ⎿  Set model to glm-5.1
+
+> /effort                                                                       
+  ⎿  Set effort level to xhigh: Deeper reasoning than high, just below maximum
+     (Opus 4.7 only)
+
+> /exit                                                                         
+  ⎿  Goodbye!
+
+> /resume                                                                       
+  ⎿  No conversations found to resume
+
+> "C:\Users\17493\Desktop\A survey of                                           
+  OPD.pdf"辅助我学习这篇paper，我现在学习到2.2                                  
+
+● 我先阅读一下这篇论文，以便理解其内容。
+
+  Read 1 file (ctrl+o to expand)
+
+● 这个PDF文件似乎有密码保护，无法直接读取。让我在网上搜索这篇论文的内容。
+
+● Web Search(""A survey of OPD" paper survey")
+  ⎿  Did 0 searches in 26s
+
+● 找到了这篇论文。让我从arXiv获取内容，详细了解你正在学习的部分。
+
+● 🌐 Z.ai Built-in Tool: webReader
+
+  Input:
+  {"url":"https://arxiv.org/html/2604.00626v1","retain_images":true}
+
+  Executing on server...
+
+● Output:
+  webReader_result_summary: [{"text": {"title": "A Survey of On-Policy
+  Distillation for Large Language Models", "url":
+  "https://arxiv.org/html/2604.00626v1", "content": "A Survey of On-Policy
+  Distillation for Large Language Models\n\n##### Report GitHub
+  Issue\n\n×\n\nTitle:\n\nContent selection saved. Describe the issue below:...
+
+● 这篇论文是 "A Survey of On-Policy Distillation for Large Language 
+  Models"（关于策略蒸馏综述），来自腾讯的 Mingyang Song 和 Mao
+  Zheng，arXiv:2604.00626。
+
+  你已经学到 2.2 节，下面帮你梳理一下到目前为止的核心内容。
+
+  ---
+  已学内容回顾
+
+  1. 引言 (Section 1) — 核心问题
+
+  - 传统知识蒸馏 (KD) 是 off-policy 
+  的：学生在静态的教师生成数据上训练，从不面对自己的错误
+  - 这导致 exposure bias（暴露偏差）：训练时前缀来自数据分布，推理时前缀来自学生
+  自己（可能有错），误差会自回归地累积
+  - OPD（On-Policy Distillation）
+  的核心思想：让学生自己生成轨迹，然后让教师对这些学生自己生成的输出给出反馈
+  - 理论基础来自模仿学习中的 DAgger 算法：将误差累积从 O(εT²) 降低到 O(εT)
+
+  2.1 知识蒸馏基础 (Section 2.1)
+
+  关键公式：
+  - 公式 (1)：温度 τ 软化概率分布 p(y|x;τ) = exp(z_y/τ) / Σ exp(z_y'/τ)
+  - 公式 (2)：标准 KD 损失 = τ² · D_KL(p_T ∥ p_θ)，τ² 缩放因子保持梯度量级一致
+  - 公式 (5)：高温极限下，KD 退化为logits 之间的 MSE（均值平方误差）—
+  即匹配教师的原始 logit 结构
+
+  2.2 Token级 vs Sequence级蒸馏 (Section 2.2) — 你刚学完这里
+
+  这是承上启下的关键一节：
+
+  ┌──────────┬──────────────────────┬───────────────────────────────────────┐
+  │          │    Token-Level KD    │           Sequence-Level KD           │
+  ├──────────┼──────────────────────┼───────────────────────────────────────┤
+  │ 公式     │ 公式 (6)：逐 token   │ 公式 (7)：整个序列空间的全局 KL       │
+  │          │ 求和 D_KL            │                                       │
+  ├──────────┼──────────────────────┼───────────────────────────────────────┤
+  │ 前缀来源 │ 静态数据集 D 中的    │ 需要遍历整个序列空间 Y                │
+  │          │ y_{<t}               │                                       │
+  ├──────────┼──────────────────────┼───────────────────────────────────────┤
+  │ 计算     │ 可行（前缀固定）     │ 不可行（|Y| = |V|^T 指数爆炸）        │
+  ├──────────┼──────────────────────┼───────────────────────────────────────┤
+  │ 近似     │ 直接计算             │ 公式 (8)：用 beam-search 输出近似为   │
+  │          │                      │ Dirac delta → 简化为 NLL（公式 9）    │
+  ├──────────┼──────────────────────┼───────────────────────────────────────┤
+  │          │ 优化 next-token      │ 仍然是 off-policy —                   │
+  │ 核心局限 │ 准确率，假设历史     │ 学生仍然在教师的静态轨迹上训练        │
+  │          │ y_{<t} 无误          │                                       │
+  └──────────┴──────────────────────┴───────────────────────────────────────┘
+
+  关键结论：Sequence-Level KD
+  虽然试图解决全局一致性问题，但学生从未在训练时使用自己的前缀，所以仍然存在
+  train-test mismatch，这直接引出 2.3 节的 exposure bias 问题。
+
+  ---
+  接下来 2.3 节的重点预告
+
+  2.3 节将正式用 MDP 框架 形式化 exposure bias：
+  - 把自回归生成建模为马尔可夫决策过程
+  - 状态 = token 前缀，动作 = 下一个 token
+  - 训练时的状态访问分布 d_D ≠ 推理时的 d_{π_θ}
+  - 误差累积的 O(εT²) 上界
+
+  需要我对某个具体概念深入解释，还是继续帮你梳理后面的章节？
+
+  Sources:
+  - https://arxiv.org/abs/2604.00626
+  - https://arxiv.org/html/2604.00626v1
+
+✻ Baked for 1m 33s
+
+> beam search是什么意思？在通信工程经常有这个词，在sequence space里是怎么做的？ 
+
+● 好问题。Beam search 在两个领域的含义不同，我来分别解释，然后重点讲它在
+  Sequence-Level KD 里的角色。
+
+  ---
+  通信工程中的 Beamforming / Beam Search
+
+  在通信中，这指的是波束赋形（Beamforming）——天线阵列通过调节各阵元的相位/幅度，
+  将信号能量集中到某个方向，形成一个"波束"。Beam search
+  就是搜索最优的波束方向，以最大化接收信号质量。本质上是在空间角度域搜索。
+
+  ---
+  NLP / LLM 中的 Beam Search
+
+  在序列生成中，beam search
+  是一种启发式解码策略，用于在指数级的候选序列空间中找到高概率输出。
+
+  核心思想
+
+  贪心解码（greedy）每步只保留概率最高的 1 个 token，容易陷入局部最优。Beam
+  search 每步保留 top-B 个候选（B = beam width），最终选总概率最高的序列。
+
+  具体步骤（B=2 为例）
+
+  步骤 1: 生成所有 token 概率
+    候选: [("The", 0.6), ("A", 0.3), ...]  → 保留 top-2
+
+  步骤 2: 对每个候选，展开下一个 token
+    "The" → "The cat"(0.6×0.5=0.30), "The dog"(0.6×0.3=0.18)
+    "A"   → "A cat" (0.3×0.4=0.12), "A bird"(0.3×0.2=0.06)
+    → 保留 top-2: "The cat", "The dog"
+
+  步骤 3: 继续展开...直到遇到 <EOS>
+
+  最终从 B 条完整序列中选概率最高的那条。
+
+  ---
+  在 Sequence-Level KD（2.2节）中的角色
+
+  这是关键。回到论文的公式 (7)：
+
+  $$\mathcal{L}{\text{Seq-KD}} = \sum{y \in \mathcal{Y}} P_{\mathcal{T}}(y|x)
+  \log \frac{P_{\mathcal{T}}(y|x)}{P_{\theta}(y|x)}$$
+
+  这个求和需要遍历整个序列空间 $\mathcal{Y}$，而 $|\mathcal{Y}| =
+  |V|^T$（词表大小的 T 次方）。比如词表 32000、序列长度 100，那就是
+  $32000^{100}$——完全不可计算。
+
+  Beam search 作为近似手段
+
+  论文公式 (8) 的做法：用 beam search 找到教师模型概率最高的那条序列
+  $\hat{y}$，然后把教师的分布近似为一个 Dirac delta（冲激函数）：
+
+  $$P_{\mathcal{T}}(y|x) \approx \begin{cases} 1 & \text{if } y = \hat{y} \ 0 &
+  \text{otherwise} \end{cases}$$
+
+  意思就是：教师的分布极度集中在 beam search 最优输出上，其他序列概率近似为 0。
+
+  代入公式 (7) 后，KL 散度简化为：
+
+  $$\mathcal{L}{\text{Seq-Approx}} = -\sum{t=1}^{|\hat{y}|} \log
+  p_\theta(\hat{y}t | x, \hat{y}{<t})$$
+
+  也就是学生只需在教师的"最优序列"上做 NLL（负对数似然）——这就是公式 (9)。
+
+  一个直觉类比
+
+  ▎ 把教师的整个序列分布想象成一座山。Beam search 
+  ▎ 就是找到山顶的那一点，然后说"这座山就是一个点"。
+
+  这个近似之所以合理，是因为好的语言模型的分布确实很尖锐（peaked）——大部分概率集
+  中在少数几条序列上。但它也是粗糙的：忽略了次优但仍然合理的推理路径，这也是后来
+   on-policy 方法想要改进的方向。
+
+  ---
+  需要我继续解释 2.3 节的 MDP 形式化和 exposure bias，还是你对 beam search
+  还有疑问？
+
+✻ Baked for 37s
+
+※ recap: 你正在通过 arXiv:2604.00626 这篇论文学习 OPD，目前在学习 2.2 节。我们刚刚讲解了序列级 KD 中的束搜索（beam search）。下一步是 2.3 节——分布不匹配问题和暴露偏差。 (disable recaps in /config)
+
+> 论文还提到student never conditions predictions on its own prefixes during     
+  training，怎么理解？在传统蒸馏里如果训练阶段由模型自己生成输出，那么prefix就  
+  是student的，然后朝着教师的方向调整，这不是挺好的吗？我能想到的就是CoT蒸馏，  
+  这种情况确实存在训推不一致，但是我也不知道CoT蒸馏具体的训练循环，帮我细致地解 
+  读一下。                                                                      
+
+● 这个问题问到了核心。你的直觉其实是对的——"让学生自己生成再纠正"正是 OPD
+  的做法。但传统 KD 之所以不这样做，有非常具体的原因。让我用训练循环来对比。
+
+  ---
+  Teacher Forcing：传统 KD 到底怎么训练的
+
+  关键在于一次前向传播。假设训练样本是 "The cat sat on the mat"：
+
+  输入 (ground truth prefix)  →  模型预测下一个 token
+  ─────────────────────────────────────────────────
+  "<BOS>"                    →  预测分布 vs 教师分布 "The"
+  "<BOS> The"                →  预测分布 vs 教师分布 "cat"
+  "<BOS> The cat"            →  预测分布 vs 教师分布 "sat"
+  "<BOS> The cat sat"        →  预测分布 vs 教师分布 "on"
+  ...
+
+  注意：每一步的 prefix 全部来自训练数据（教师生成的序列）。Transformer 的
+  self-attention 机制让这 一次前向传播 就能算出所有位置的输出——因为 ground truth
+   的每个 token 都是已知的，不需要等上一个 token 生成完。
+
+  一次前向传播（并行）：
+    Input:   [<BOS>] [The]  [cat] [sat] [on]  [the]
+    Output:  [p₁]    [p₂]  [p₃]  [p₄]  [p₅]  [p₆]
+    Target:  [The]   [cat]  [sat] [on]  [the] [mat]
+
+    Loss = Σ D_KL(p_teacher(·|prefix_t) ∥ p_student(·|prefix_t))
+    然后一次反向传播更新参数
+
+  这就是"student never conditions on its own prefixes"的意思——prefix 永远是
+  ground truth / 教师生成的完美序列。
+
+  ---
+  如果用学生自己的 prefix 会怎样
+
+  你说的思路完全正确，这就是 autoregressive training（也是 OPD 的做法）：
+
+  步骤1: 学生生成 "<BOS>" → 预测得到 "The"    ← 学生自己的输出
+  步骤2: 学生生成 "<BOS> The" → 预测得到 "dog"  ← 注意，prefix 包含学生自己的
+  "The"
+  步骤3: 学生生成 "<BOS> The dog" → 预测得到 "sat"
+  ...
+
+  但这里有个根本性的区别——你没法并行了：
+
+  自回归生成（串行）：
+    Step 1: Input [<BOS>]           → 生成 "The"
+    Step 2: Input [<BOS> "The"]     → 生成 "dog"    ← 必须等 Step 1 完成
+    Step 3: Input [<BOS> "The" "dog"] → 生成 "sat"  ← 必须等 Step 2 完成
+    ...
+
+  为什么传统 KD 不这么做？三个原因：
+
+  1. 训练效率暴跌
+
+  ┌──────────────┬─────────────────┬────────────────┐
+  │              │ Teacher Forcing │ Autoregressive │
+  ├──────────────┼─────────────────┼────────────────┤
+  │ T=100 的序列 │ 1 次前向传播    │ 100 次前向传播 │
+  ├──────────────┼─────────────────┼────────────────┤
+  │ GPU 并行度   │ 全序列并行      │ 逐步串行       │
+  ├──────────────┼─────────────────┼────────────────┤
+  │ 训练速度     │ 快              │ 慢 100 倍      │
+  └──────────────┴─────────────────┴────────────────┘
+
+  这是最实际的原因。Teacher forcing 利用了 Transformer 的并行性，训练极快。
+
+  2. 早期错误雪崩
+
+  Ground truth: "The cat sat on the mat"
+
+  Teacher Forcing: 每步 prefix 都是对的
+    [<BOS>]         → 预测 "The"  ✓  (prefix 正确，梯度信号干净)
+    [<BOS> The]     → 预测 "cat"  ✓
+    [<BOS> The cat] → 预测 "sat"  ✓
+
+  Autoregressive: prefix 可能是错的
+    [<BOS>]              → 预测 "The"  ✓
+    [<BOS> The]          → 预测 "dog"  ✗  (模型还不够好，但没关系)
+    [<BOS> The dog]      → 预测 "ran"  ✗  ← 基于错误 prefix，越偏越远
+    [<BOS> The dog ran]  → 预测 ???   ← 完全跑偏，梯度噪声极大
+
+  早期训练时学生很弱，一步错步步错，生成的序列质量极差。在这些差序列上计算
+  loss，梯度信号非常嘈杂，训练不稳定甚至发散。
+
+  3. 梯度路径变长
+
+  Teacher forcing 中，每个位置的 loss
+  只通过一次反向传播就能更新。自回归方式下，step T 的 loss 要穿过 T
+  个串行的前向传播才能回传到参数——梯度消失/爆炸的风险大幅增加。
+
+  ---
+  那为什么 OPD 还是要这么做？
+
+  因为 teacher forcing 有一个训练时看不到、推理时才会暴露的致命问题：
+
+  训练时: prefix 永远正确 → 学生从未见过"自己犯错后的状态"
+  推理时: prefix 是自己生成的 → 一旦出错，学生不知道怎么恢复
+
+  类比：你学车时教练永远帮你打方向盘（训练时 prefix 正确）
+       你自己开时一旦偏了就慌了，因为从来没练习过纠正（exposure bias）
+
+  OPD 的代价是训练慢、不稳定，但好处是学生学会了从自己的错误中恢复。
+
+  所以论文里 GKD（公式 16）用了混合策略 $\pi_{\text{mix}} = \lambda \cdot
+  p_\theta + (1-\lambda) \cdot \mathcal{D}$——以概率 $\lambda$ 用学生自己的
+  prefix，概率 $1-\lambda$ 用数据集的 prefix。这样既保留了 teacher forcing
+  的稳定性和效率，又让学生逐步接触自己的错误。
+
+  ---
+  CoT 蒸馏的训练循环
+
+  CoT 蒸馏的训练循环大致如下：
+
+  === Off-Policy CoT 蒸馏（如 DeepSeek-R1 的做法）===
+
+  1. 教师生成 CoT 数据（离线，一次性）：
+     输入: "解方程 x²-5x+6=0"
+     教师输出: "我需要因式分解...x²-5x+6=(x-2)(x-3)...所以 x=2 或 x=3"
+
+  2. 收集 80 万条这样的 (输入, CoT推理, 答案) 三元组
+
+  3. 学生用 teacher forcing 训练（标准 SFT）：
+     [<BOS>]                               → 预测 "我"
+     [<BOS> 我]                             → 预测 "需要"
+     [<BOS> 我需要]                          → 预测 "因式"
+     ...
+     每一步的 prefix 都来自教师的推理链（不是学生自己生成的）
+
+     → 一次前向传播并行算完，一次反向传播更新
+
+  === On-Policy CoT 蒸馏（如 OPSD 的做法）===
+
+  1. 学生自己生成推理链（在线，每轮训练都重新生成）：
+     输入: "解方程 x²-5x+6=0"
+     学生生成: "我用求根公式...x=(5±√1)/2...所以 x=3 或 x=2"
+
+     注意：这里的 "我用求根公式" 是学生自己选的推理路径
+     教师的推理用的是因式分解——路径不同！
+
+  2. 教师对学生的 prefix 打分：
+     对于学生的 prefix "我用求根公式..."
+     教师输出 p_T(·|输入, "我用求根公式...")
+     → 给出下一步应该是什么的概率分布
+
+  3. 在学生的序列上计算 loss：
+     D_KL(p_teacher(·|学生的prefix) ∥ p_student(·|学生的prefix))
+
+     关键：prefix 是学生自己的，但纠正信号来自教师
+
+  两种方式的本质区别
+
+  ┌─────────────┬─────────────────────────┬──────────────────────────┐
+  │             │ Off-Policy CoT (R1风格) │ On-Policy CoT (OPSD风格) │
+  ├─────────────┼─────────────────────────┼──────────────────────────┤
+  │ 推理路径    │ 教师的路径              │ 学生自己探索的路径       │
+  ├─────────────┼─────────────────────────┼──────────────────────────┤
+  │ Prefix 来源 │ 教师生成的完美 CoT      │ 学生自己生成（可能有错） │
+  ├─────────────┼─────────────────────────┼──────────────────────────┤
+  │ 教师角色    │ 提供标准答案            │ 对学生的路径给出反馈     │
+  ├─────────────┼─────────────────────────┼──────────────────────────┤
+  │ 并行性      │ 可并行                  │ 串行生成                 │
+  ├─────────────┼─────────────────────────┼──────────────────────────┤
+  │ 学到什么    │ "按教师的思路推理"      │ "在自己的思路下纠错"     │
+  └─────────────┴─────────────────────────┴──────────────────────────┘
+
+  Off-Policy 的问题用你的例子就很清楚：如果教师习惯用因式分解解题，学生在推理时
+  如果先走了求根公式的思路，prefix 就偏了教师的训练数据——模型就不知道怎么继续了
+  ，因为训练时从来没见过"求根公式"这个 prefix。
+
+  需要我继续帮你梳理 2.3 的 MDP 形式化吗？
+
+✻ Cooked for 1m 33s
+
+> 我还是不理解你的例子，举个例子，如果做cot蒸馏的话，模型输入是什么呢？我理解是 
+  只有问题，然后计算学生的思维链分布和教师思维链分布的差异，虽然我不知道这个具  
+  体怎么实现，但是这种情况prefix不是学生自己生成的吗？还有如果注意力机制一次并  
+  行算完所有的输出，那网页端的大模型流式输出又是怎么回事？                      
+
+● 两个问题都很关键，我分别讲清楚。
+
+  ---
+  问题一：训练时的 prefix 到底是谁的
+
+  你的困惑在于：模型生成 CoT 时，token 一个接一个出现，prefix
+  不就是之前自己生成的吗？
+
+  推理时是的，但训练时不是。 关键区别在于：
+
+  推理时（你在网页端看到的流式输出）
+
+  输入: "解方程 x²-5x+6=0"
+
+  Step 1: 模型看 [<BOS>]                         → 采样得 "我"
+  Step 2: 模型看 [<BOS>, 我]                      → 采样得 "需要"  ←
+  "我"是模型自己生成的
+  Step 3: 模型看 [<BOS>, 我, 需要]                → 采样得 "因式"  ←
+  "我需要"也是模型自己生成的
+  ...
+
+  这时候 prefix 确实是模型自己生成的。每一步都要等上一步完成才能开始。
+
+  训练时（Teacher Forcing）
+
+  假设训练数据里教师的完整 CoT 是："我 需 要 因 式 分 解"
+
+  训练时的实际操作是把整条序列一次性塞给模型：
+
+  输入张量 x:     [<BOS>]  [我]   [需]   [要]   [因]   [式]
+                   ↑       ↑      ↑      ↑      ↑      ↑
+                   全部来自训练数据（教师的CoT），一次性全部填入
+
+  模型前向传播（一次）:
+    位置0的输出: p₁(·) = 模型对 [<BOS>] 后下一个token的预测
+    位置1的输出: p₂(·) = 模型对 [<BOS>, 我] 后下一个token的预测
+    位置2的输出: p₃(·) = 模型对 [<BOS>, 我, 需] 后下一个token的预测
+    位置3的输出: p₄(·) = 模型对 [<BOS>, 我, 需, 要] 后下一个token的预测
+    位置4的输出: p₅(·) = 模型对 [<BOS>, 我, 需, 要, 因] 后下一个token的预测
+    位置5的输出: p₆(·) = 模型对 [<BOS>, 我, 需, 要, 因, 式] 后下一个token的预测
+
+  Target:  [我]   [需]   [要]   [因]   [式]   [分]
+           ↑      ↑      ↑      ↑      ↑      ↑
+           全部来自训练数据
+
+  这里的关键：位置 2 的输入 [<BOS>, 我, 需] 中的 我 和 需
+  不是模型自己预测的，而是直接从训练数据里取的。模型在位置 1
+  可能预测了"他"而不是"我"，但这完全不影响位置 2 的输入——位置 2
+  看到的永远是训练数据里的"我"。
+
+  这就是"student never conditions on its own prefixes"的意思。用代码表示：
+
+  # Teacher Forcing（传统KD的训练方式）
+  teacher_cot = ["我", "需", "要", "因", "式", "分", "解"]
+
+  # 把完整的 CoT 拼成输入，一次性前向传播
+  input_ids = [BOS] + teacher_cot[:-1]  # [<BOS>, 我, 需, 要, 因, 式, 分]
+  target_ids = teacher_cot               # [我, 需, 要, 因, 式, 分, 解]
+
+  logits = model(input_ids)              # 一次前向，得到所有位置的预测
+  loss = KL_divergence(teacher_logits, logits)  # 和教师分布算差异
+  loss.backward()                        # 一次反向传播
+
+  模型从未看到过自己的预测被送回输入。它看到的 prefix
+  永远是教师数据里的完美序列。
+
+  ---
+  问题二：那流式输出是怎么回事
+
+  这就涉及到训练和推理的本质区别：
+
+  ┌──────────┬───────────────────────────┬─────────────────────────────────┐
+  │          │  训练（Teacher Forcing）  │          推理（生成）           │
+  ├──────────┼───────────────────────────┼─────────────────────────────────┤
+  │ 目标序列 │ 已知（来自训练数据）      │ 未知（要生成）                  │
+  ├──────────┼───────────────────────────┼─────────────────────────────────┤
+  │ 能否并行 │ 能，因为每个 token 都已知 │ 不能，因为要等上一个 token 生成 │
+  └──────────┴───────────────────────────┴─────────────────────────────────┘
+
+  流式输出的过程是：
+
+  === 网页端流式推理 ===
+
+  用户输入: "解方程 x²-5x+6=0"
+
+  GPU 内部：
+    Forward 1: 输入 [<BOS>, 问题tokens] → 得到第1个token的logits → 采样得 "我"
+    Forward 2: 输入 [<BOS>, 问题tokens, 我] → 得到第2个token的logits → 采样得
+  "需"
+    Forward 3: 输入 [<BOS>, 问题tokens, 我, 需] → 得到第3个token的logits →
+  采样得 "要"
+    ...
+
+  每一步 Forward 都是一次独立的前向传播，必须等上一步的 token 确定后才能进行。
+
+  网页端看到的"打字机效果"，就是服务器每算出一个 token 就通过 SSE/WebSocket
+  推送给前端。看起来是流式的，本质上是串行计算的。
+
+  但训练时因为答案已经知道，所以能一次性算完：
+
+  === 训练（Teacher Forcing）===
+
+  GPU 内部（一次 Forward）：
+    输入: [<BOS>, 问题tokens, 我, 需, 要, 因, 式, 分]
+
+    Self-Attention 并行计算：
+      位置0 看到 [<BOS>]                           → 输出 logits₀
+      位置1 看到 [<BOS>, 问题tokens]                → 输出 logits₁
+      位置2 看到 [<BOS>, 问题tokens, 我]            → 输出 logits₂
+      ...                                          （causal mask 保证只看左边）
+
+    一次矩阵乘法搞定所有位置 → 一次反向传播更新参数
+
+  这里用到了 causal mask（因果掩码）：虽然所有位置同时计算，但 attention mask
+  确保位置 i 只能看到位置 0~i
+  的内容，看不到未来。这保证了并行计算和因果关系不矛盾。
+
+  一个简化的直觉
+
+  ▎ 训练就像开卷考试——答案在你面前，你可以同时批改所有题目的作答。
+  ▎
+  ▎ 推理就像闭卷考试——你只能一道一道做，下一题的答案取决于上一题你写了什么。
+
+  ---
+  回到你的困惑
+
+  ▎ "CoT 蒸馏里，思维链不是学生自己生成的吗？"
+
+  传统 CoT 蒸馏（off-policy）不是。 训练时思维链是教师提前写好的，学生只是用
+  teacher forcing 学习复现这条思维链。学生从未在训练时自己生成过思维链。
+
+  只有 on-policy 方法（如 OPSD）才会让学生真正自己生成推理链，然后教师在学生的链
+  上给反馈。代价就是训练变成串行的，慢很多。
+
+✻ Cogitated for 1m 17s
+> 那一般的模型训练也是这样一次前向就算完所有的token吗？                         
+
+● 对，所有自回归语言模型的训练都是这样——预训练、SFT、RLHF 的 SFT 阶段，全都用
+  teacher forcing。
+
+  ---
+  预训练
+
+  互联网上抓了一篇文章："量子计算利用量子叠加态进行并行运算"
+
+  输入张量:  [量]  [子]  [计]  [算]  [利]  [用]  [量]  [子]
+  Target:   [子]  [计]  [算]  [利]  [用]  [量]  [子]  [叠]
+
+  一次 Forward → 得到 8 个位置的概率分布
+  一次 Backward → 更新参数
+
+  模型看到的永远是"正确的"前文。它从上万亿 token
+  的文本中用这种方式学习预测下一个 token。
+
+  SFT（指令微调）
+
+  数据: {"instruction": "翻译成英文", "output": "你好→Hello"}
+
+  拼接成序列: [系统提示] [指令: 翻译成英文] [你好→Hello]
+
+  对 "你好→Hello" 部分的每个 token 算 loss
+  前面的系统提示和指令部分不算 loss（只有回答部分参与训练）
+  但同样是一次 Forward + 一次 Backward
+
+  为什么全都用 teacher forcing
+
+  就一个字：快。
+
+  一个长度 4096 的序列：
+  - Teacher forcing：1 次前向传播
+  - 自回归生成：4096 次前向传播
+
+  预训练要处理万亿 token，如果用自回归方式，训练成本翻几千倍，根本不可行。
+
+  ---
+  那 RL 阶段呢
+
+  RLHF 中的 PPO/GRPO 阶段确实不用 teacher 
+  forcing——模型真正自己生成完整回复，然后用奖励模型打分，再用 policy gradient
+  更新。这和 on-policy distillation 类似，都是串行生成。
+
+  这也是为什么整个 LLM 训练 pipeline 的算力分配通常是：
+
+  预训练（teacher forcing）:  99% 的算力
+  SFT（teacher forcing）:     ~0.5%
+  RL（自回归生成）:            ~0.5%
+
+  前两个阶段占了绝大部分算力，正因为 teacher forcing 可以高度并行。RL
+  阶段很慢但只做少量步数。
+
+  所以整个链条是：训练时一直用 teacher forcing（快但有问题）→ 
+  推理时自回归生成（暴露 exposure bias）→ OPD 在训练阶段引入自回归生成来弥补这个
+   gap（慢但更准）。
+
+✻ Baked for 29s
+
+※ recap: 你在学 OPD 综述论文，目前学到 2.2 节，我正在帮你解释传统训练中 teacher forcing 和自回归生成的区别。下一步可以继续讲 2.3 节的 MDP 形式化和 exposure bias。 (disable recaps in /config)
+
+> 那我能不能把监督微调全部理解为off-policy distillation                         
+
+● 这个理解基本正确，而且这篇论文的框架确实支持这个视角。
+
+  SFT 就是 off-policy 的
+
+  SFT 和 off-policy KD 共享完全相同的结构：
+
+  ┌───────────────┬────────────────────────┬────────────────────────┐
+  │               │          SFT           │     Off-Policy KD      │
+  ├───────────────┼────────────────────────┼────────────────────────┤
+  │ 训练数据来源  │ 人类写的               │ 教师模型生成的         │
+  ├───────────────┼────────────────────────┼────────────────────────┤
+  │ 前缀来源      │ 数据集（不是模型自己） │ 数据集（不是模型自己） │
+  ├───────────────┼────────────────────────┼────────────────────────┤
+  │ 目标信号      │ 人类答案（one-hot）    │ 教师概率分布（soft）   │
+  ├───────────────┼────────────────────────┼────────────────────────┤
+  │ 训练方式      │ Teacher forcing        │ Teacher forcing        │
+  ├───────────────┼────────────────────────┼────────────────────────┤
+  │ Exposure bias │ 有                     │ 有                     │
+  └───────────────┴────────────────────────┴────────────────────────┘
+
+  唯一的区别是教师信号的粒度：
+
+  SFT 的 "教师分布":
+    "解方程..." → p(next) = [0, 0, ..., 1, ..., 0]    ←
+  one-hot，只有一个正确答案
+
+  Off-Policy KD 的教师分布:
+    "解方程..." → p(next) = [0.01, 0.05, ..., 0.6, ...]  ← soft，包含"暗知识"
+
+  所以 SFT 可以理解为：从一个只给硬标签的退化教师做 off-policy distillation。
+
+  从论文的 MDP 框架看
+
+  论文 2.3 节的 exposure bias 分析对两者完全等价：
+
+  $$d_{\mathcal{D}}(s) \neq d_{\pi_\theta}(s)$$
+
+  训练时的状态分布 $d_{\mathcal{D}}$（人类/教师的前缀）≠ 推理时的状态分布
+  $d_{\pi_\theta}$（模型自己的前缀）。不管目标信号是 one-hot 还是 soft
+  distribution，这个 train-test mismatch 都存在。
+
+  一个需要注意的细微差别
+
+  严格来说有两点不同：
+
+  1. "教师"是不是一个模型
+
+  SFT 的数据是人工标注的，没有一个具体的"教师模型"在输出概率分布。所以传统上不叫
+   distillation。但从训练范式的角度看，确实是 off-policy 的。
+
+  2. 信号的丰富程度
+
+  真正 KD 的价值在于教师提供的 soft distribution（暗知识）——比如教师认为"猫"概率
+   0.6、"狗"概率 0.3，这个结构信息在 SFT 的 one-hot 标签里是没有的。所以
+  off-policy KD 的效果通常比纯 SFT 好，因为每个 token 位置的信息量更大。
+
+  ---
+  但本质上你的理解是对的。论文里引用的 Gudibande et al. (2023)
+  正是在说这个事——在 GPT-4 生成的数据上做 SFT 微调小模型，这就是同时在做 SFT 和
+  off-policy KD，两者共享相同的 exposure bias 问题。OPD 要解决的，也是 SFT 和
+  off-policy KD 共同的根本缺陷。
+
+✻ Cogitated for 44s
+
+> 那人类教师和模型教师怎么提供教师信号的？比如模型教师在每个token都有softmax向  
+  量，怎么分别在token-level和sequence-level上做损失和策略更新？                 
+
+● 好问题。这涉及到教师信号的具体形式和损失计算的实现细节。
+
+  人类教师 vs 模型教师
+
+  人类教师能提供什么
+
+  人类标注者写了一段回答："答案是3"
+
+  人类提供的信号（只有文本）：
+    token序列: ["答", "案", "是", "3"]
+
+  转换成训练目标（只能 one-hot）：
+    位置0: target = one-hot("答")     → [0, 0, ..., 1, ..., 0]  只知道正确答案
+    位置1: target = one-hot("案")     → [0, 0, ..., 1, ..., 0]
+    位置2: target = one-hot("是")     → [0, 0, ..., 1, ..., 0]
+    位置3: target = one-hot("3")      → [0, 0, ..., 1, ..., 0]
+
+  人类没法给出"我觉得'为'有 20% 概率、'答'有 60% 概率"这种分布。只有确定的一个
+  token。
+
+  模型教师能提供什么
+
+  模型教师对同样的输入，每个位置输出完整的概率分布：
+
+  模型教师的信号（softmax 输出，词表大小 |V|）：
+    位置0: p_T(·|prefix₀) = [..., 0.02, ..., 0.58, ..., 0.15, ...]
+                                "为"        "答"        "结"
+    位置1: p_T(·|prefix₁) = [..., 0.01, ..., 0.72, ..., 0.08, ...]
+                                "应"        "案"        "结"
+    位置2: p_T(·|prefix₂) = [..., 0.60, ..., 0.25, ...]
+                                "是"        "为"
+    位置3: p_T(·|prefix₃) = [..., 0.55, ..., 0.30, ...]
+                                "3"         "三"
+
+  这就是"暗知识"——教师不仅知道正确答案，还知道次优选项的概率结构。
+
+  ---
+  Token-Level 损失怎么做
+
+  SFT 的做法（人类教师）
+
+  # 人类标注的 target
+  target_ids = [答, 案, 是, 3]     # token id
+
+  # 学生一次前向传播
+  student_logits = model(input_ids)  # shape: [seq_len, vocab_size]
+
+  # 每个位置算交叉熵（等价于 KL(student ∥ one-hot)）
+  loss = CrossEntropyLoss(student_logits, target_ids)
+  # 等价于：
+  # loss = -Σ_t log p_θ(target_t | prefix_t)
+
+  每个位置只有一个正确答案，loss 就是"正确 token 的概率够不够大"。
+
+  KD 的做法（模型教师，Token-Level）
+
+  # 教师和学生各一次前向传播
+  teacher_logits = teacher_model(input_ids)   # [seq_len, vocab_size]
+  student_logits = student_model(input_ids)   # [seq_len, vocab_size]
+
+  # 温度软化
+  tau = 2.0
+  p_T = softmax(teacher_logits / tau)   # 教师的软分布
+  p_S = softmax(student_logits / tau)   # 学生的软分布
+
+  # 每个位置算 KL 散度
+  loss = 0
+  for t in range(seq_len):
+      # KL(p_T ∥ p_S) = Σ_v p_T(v) * log(p_T(v) / p_S(v))
+      kl_t = sum(p_T[t, v] * (log(p_T[t, v]) - log(p_S[t, v])) for v in vocab)
+      loss += kl_t
+
+  loss = tau**2 * loss / seq_len
+
+  向量的维度就是词表大小 |V|（比如 32000）。每个位置都有一个 32000
+  维的概率分布，KL 散度比较这两个分布的差异。
+
+  直观对比
+
+  SFT 每个位置的损失：
+    教师说 "答" → 只管 p_θ("答") 够不够大
+    → 梯度只更新 "答" 这个 token 对应的 logit
+
+  KD 每个位置的损失：
+    教师说 p("答")=0.58, p("为")=0.02, p("结")=0.15, ...
+    → 学生要在整个 32000 维分布上匹配教师
+    → 梯度同时更新所有 token 的 logit
+    → 信息量大得多
+
+  ---
+  Sequence-Level 损失怎么做
+
+  Token-level 是"每个位置独立比较分布"，sequence-level
+  是"把整条序列当作一个整体来比较"。
+
+  为什么需要 sequence-level
+
+  教师生成的序列 y* 的联合概率：
+    P_T(y*|x) = p_T(y₁|prefix₀) × p_T(y₂|prefix₁) × ... × p_T(y_T|prefix_{T-1})
+
+  学生的联合概率：
+    P_θ(y*|x) = p_θ(y₁|prefix₀) × p_θ(y₂|prefix₁) × ... × p_θ(y_T|prefix_{T-1})
+
+  Off-Policy Sequence-Level（论文公式 7→9）
+
+  # 理论目标（不可计算）：
+  # L = D_KL(P_T(y|x) ∥ P_θ(y|x))
+  #   = Σ_{y ∈ Y} P_T(y|x) * log(P_T(y|x) / P_θ(y|x))
+  # Y = 所有可能序列，|V|^T 种 → 算不了
+
+  # 近似做法（Kim & Rush 2016）：
+  # 1. 用 beam search 找教师的最优序列 y_hat
+  y_hat = beam_search(teacher, x, beam_width=5)
+
+  # 2. 把 P_T 近似为 y_hat 上的 Dirac delta
+  # 3. KL 散度退化为学生在 y_hat 上的 NLL
+  loss = 0
+  for t in range(len(y_hat)):
+      loss -= log p_θ(y_hat[t] | x, y_hat[:t])
+  # 这就是标准 SFT，只不过训练数据从人类写的换成了教师生成的
+
+  本质就是把教师生成的序列当作"标准答案"做 SFT。
+
+  On-Policy Sequence-Level（MiniLLM，论文公式 22）
+
+  # 学生自己生成一条完整序列
+  y_student = student.generate(x)  # 自回归，串行生成
+
+  # 计算整条序列的教师概率和学生概率
+  log_p_teacher = sum(log p_T(y_student[t] | x, y_student[:t]) for t in
+  range(T))
+  log_p_student = sum(log p_θ(y_student[t] | x, y_student[:t]) for t in
+  range(T))
+
+  # Reverse KL 的梯度 = REINFORCE
+  reward = log_p_teacher - log_p_student  # 序列级的"奖励"
+
+  # 对每个 token 位置算 policy gradient
+  for t in range(T):
+      grad += reward * gradient(log p_θ(y_student[t] | x, y_student[:t]))
+
+  # 用梯度更新学生参数
+
+  这里 reward 是整条序列算出来的一个标量，但梯度更新发生在每个 token 上。这就是
+  policy gradient——整条序列好就强化路径上所有 token，整条序列差就弱化。
+
+  ---
+  总结一张表
+
+  ┌───────────────┬──────────────────────────┬──────────────────────────────┐
+  │               │         人类教师         │           模型教师           │
+  ├───────────────┼──────────────────────────┼──────────────────────────────┤
+  │ 信号形式      │ one-hot（一个 token id） │ soft distribution（          │
+  ├───────────────┼──────────────────────────┼──────────────────────────────┤
+  │ Token-Level   │ -log p_θ(y_t | prefix)   │ D_KL(p_T(·|prefix) ∥         │
+  │ Loss          │                          │ p_θ(·|prefix))               │
+  ├───────────────┼──────────────────────────┼──────────────────────────────┤
+  │ Seq-Level     │ 不适用（没有序列级分布） │ beam search 近似 → NLL /     │
+  │ Loss          │                          │ REINFORCE                    │
+  ├───────────────┼──────────────────────────┼──────────────────────────────┤
+  │ 梯度信息量    │ 只更新 1 个 logit        │ 更新全部                     │
+  └───────────────┴──────────────────────────┴──────────────────────────────┘
+
+  核心区别就是：人类教师每个位置只告诉你一个答案，模型教师每个位置告诉你整个词表
+  上的概率分布。
+
+✻ Cooked for 1m 2s
+
+※ recap: 你在学习论文"A Survey of On-Policy Distillation for Large Language Models"，已经学到 2.2 节。我们刚才详细讨论了 teacher forcing 训练机制、exposure bias 的来源、以及人类教师和模型教师在 token-level 和 sequence-level 上分别如何提供损失信号。接下来可以继续学 2.3 节的 MDP 形式化。 (disable recaps in /config)
+
+> 我觉得你说的不准确，模型教师不一定提供soft distribution，比如在蒸馏闭源模型的 
+  时候，闭源模型回答的数据集本质上和人类教师提供的数据集没有啥别，GT已经是一个  
+  完整的回答了，看不到logits，什么情况才会得到soft distribution？               
+
+● 你说得对，我之前没把这条线理清楚。
+
+  什么时候能拿到 soft distribution
+
+  只有一个条件：你能直接跑教师模型的前向传播。
+
+  也就是白盒蒸馏——你手里有教师模型的权重，把它和学生的权重一起加载到 GPU 上：
+
+  # 白盒蒸馏：两个模型都在你手里
+  teacher_logits = teacher_model(input_ids)   # 你能调用 teacher 的 forward
+  student_logits = student_model(input_ids)   # 你能调用 student 的 forward
+
+  # 得到完整的 softmax 分布
+  p_T = softmax(teacher_logits / tau)   # [seq_len, |V|]  完整的概率向量
+  p_S = softmax(student_logits / tau)   # [seq_len, |V|]
+
+  典型场景：你自己训练了一个 70B 模型，想蒸馏出 7B
+  版本。两个模型都在你机房里，权重随便用。
+
+  闭源模型：拿不到 soft distribution
+
+  你调用 GPT-4 的 API，返回的是：
+
+  response = openai.ChatCompletion.create(
+      model="gpt-4",
+      messages=[{"role": "user", "content": "解方程x²-5x+6=0"}]
+  )
+
+  # 你拿到的：
+  answer = response.choices[0].message.content
+  # "方程 x²-5x+6=0 可以因式分解为 (x-2)(x-3)=0，所以 x=2 或 x=3"
+
+  # 你拿不到的：
+  # teacher 每个位置的 logits / softmax 分布 → 完全不可见
+
+  这时候你有的只是一段文本，和人类标注者写的一段文本本质上没有区别。你只能做
+  SFT（拿文本当 one-hot target），做不了 KL 散度匹配。
+
+  所以实际情况是三种
+
+  ┌──────────┬─────────────┬─────────────────────────┬───────────────┐
+  │          │  信号形式   │        能做什么         │     举例      │
+  ├──────────┼─────────────┼─────────────────────────┼───────────────┤
+  │ 人类标注 │ 纯文本      │ SFT（one-hot CE）       │ 人工写回答    │
+  ├──────────┼─────────────┼─────────────────────────┼───────────────┤
+  │ 黑盒蒸馏 │ 纯文本      │ SFT（和人类标注没区别） │ 调 GPT-4 API  │
+  ├──────────┼─────────────┼─────────────────────────┼───────────────┤
+  │ 白盒蒸馏 │ 完整 logits │ KL 散度匹配、暗知识提取 │ 自己的 70B→7B │
+  └──────────┴─────────────┴─────────────────────────┴───────────────┘
+
+  论文第 3.2 节的 Teacher Access 维度就是在区分这件事：
+
+  - White-box：拿到 logits → token-level 分布匹配
+  - Black-box：只拿到文本 → 只能当 SFT 或构造偏好对
+  - Self-distillation：自己当教师 → 白盒
+
+  闭源模型有没有办法近似 soft distribution
+
+  有一些变通方法，但都不是真正的 full distribution：
+
+  方法1: OpenAI API 的 logprobs 参数
+    → 能拿到生成 token 的 top-5 或 top-10 概率
+    → 不是完整词表分布，但是是 partial soft signal
+
+  方法2: 多次采样（温度>0）
+    → 对同一问题调用 100 次 API
+    → 统计每个位置的 token 频率 → 近似分布
+    → 贵且粗糙
+
+  方法3: 训练判别器（GAD，论文5.1节）
+    → 用判别器区分教师文本和学生文本
+    → 判别器的输出作为 reward
+    → 间接地获取"哪里像教师、哪里不像"的信号
+
+  所以论文里黑盒蒸馏那部分的方法（Lion、GAD、OVD）本质上都是在没有 soft 
+  distribution 的情况下想办法构造替代信号——比如用判别器、用偏好对比、用 verbal
+  score，而不是直接做 KL 散度。
+
+  你之前说得对：黑盒蒸馏拿到的数据和人类标注的数据在信号形式上没有区别，区别只在
+  于数据质量和获取成本——模型教师可以批量生成大量数据，而人类标注慢且贵。但就训练
+  方法而言，闭源蒸馏本质上就是 SFT。
+
+✻ Cogitated for 49s
+
+> 那我能不能理解为，白盒蒸馏的时候，如果teacher输入的是学生生成的答案，则为on-p 
+  olicy，如果是数据集中的问题，则是off-policy，这时候也是提供soft               
+  distribution，但是似乎用这种蒸馏的人很少，我没印象。                          
+
+● 你的理解基本正确，但需要澄清两个点。
+
+  On-policy vs Off-policy 的区别不在输入，在 prefix
+
+  不管是 on-policy 还是 off-policy，输入（问题）都来自数据集。区别在于：
+
+  Off-policy 白盒蒸馏（传统 KD）：
+    数据集中的问题: "解方程x²-5x+6=0"
+    数据集中教师的回答: "因式分解(x-2)(x-3)=0, x=2或3"
+
+    第3步的 prefix: "因式分解(x-2"  ← 来自数据集（教师写的）
+    教师给出: p_T(·|"因式分解(x-2") = soft distribution  ← 有 logits
+    学生给出: p_θ(·|"因式分解(x-2") = soft distribution
+    Loss: D_KL(p_T ∥ p_θ)  ← 两个分布的 KL 散度
+
+  On-policy 白盒蒸馏（OPD）：
+    数据集中的问题: "解方程x²-5x+6=0"  ← 问题仍然来自数据集
+    学生自己生成的回答: "我用求根公式x=(5±√1)/2"
+
+    第3步的 prefix: "我用求根公"  ← 来自学生自己生成的
+    教师给出: p_T(·|"我用求根公") = soft distribution  ← 仍然有 logits
+    学生给出: p_θ(·|"我用求根公") = soft distribution
+    Loss: D_KL(p_T ∥ p_θ)  ← 还是 KL 散度
+
+  关键区别：prefix 是数据集的还是学生自己生成的。教师的 soft distribution
+  在两种情况下都能拿到（因为是白盒）。
+
+  Off-policy 白盒蒸馏其实很常见
+
+  你可能没注意到，但它确实是主流：
+
+  - DistilBERT：在 BERT 的输出 logits 上做 KL 散度，prefix 来自数据集
+  - TinyBERT：Google 做的 BERT 蒸馏，off-policy 白盒
+  - GKD 的 λ=0 设置：就是 off-policy 白盒蒸馏
+  - 传统 NMT 蒸馏（Kim & Rush 2016）：机器翻译模型之间的蒸馏
+
+  你之所以没印象，可能是因为在 LLM 时代，白盒教师变得稀少了：
+
+  LLM 时代的实际情况：
+
+  有闭源教师（GPT-4, Claude）
+    → 黑盒，拿不到 logits → 只能做 SFT 或偏好学习
+    → 这是你最常见的场景
+
+  有开源教师（Qwen-72B, Llama-70B）
+    → 白盒，能拿到 logits
+    → 但很多人直接拿教师生成的数据做 SFT（简单粗暴有效）
+    → 或者直接上 on-policy 方法（GKD, DistiLLM）
+
+  off-policy 白盒 → "有了白盒条件为什么不直接上 on-policy？"
+
+  为什么 off-policy 白盒蒸馏在 LLM 时代被跳过
+
+  ┌──────────────┬───────────────────────────────────────────────────────────┐
+  │     因素     │                           说明                            │
+  ├──────────────┼───────────────────────────────────────────────────────────┤
+  │ 效果提升有限 │ 有 soft distribution 比 one-hot 好，但 exposure bias      │
+  │              │ 问题仍在                                                  │
+  ├──────────────┼───────────────────────────────────────────────────────────┤
+  │ 成本增加不少 │ 要同时加载教师和学生在 GPU 上，内存翻倍                   │
+  ├──────────────┼───────────────────────────────────────────────────────────┤
+  │ 性价比不高   │ 花了加载教师的成本，但 prefix 还是数据集的 →              │
+  │              │ 不如多花一点直接做 on-policy                              │
+  ├──────────────┼───────────────────────────────────────────────────────────┤
+  │ SFT 太方便了 │ 教师生成数据 → 直接 SFT → 效果已经够用了                  │
+  └──────────────┴───────────────────────────────────────────────────────────┘
+
+  所以实际工程中的常见路径是：
+
+  闭源教师 → 生成数据 → SFT（大多数人止步于此）
+                           ↓ 效果不够
+  开源教师 → 白盒 on-policy（直接跳过 off-policy 白盒）
+
+  Off-policy 白盒蒸馏在理论上是一个有意义的中间态（比 SFT 信号更丰富，比
+  on-policy 更稳定），但在实践中被两头挤压——比 SFT 麻烦但提升有限，on-policy
+  又明显更好。所以你很少看到就是因为它是一个被跳过的阶段。
+
+✻ Brewed for 53s
+
+> 但是显然on-policy白盒蒸馏会更加work，为什么OPD在2025年下半年才变成研究主流？  
+
+● 这个问题特别好。OPD 并不是新概念——模仿学习领域的 DAgger 算法 2011
+  年就有了。但在 LLM 上真正 work 且被广泛采用，确实是 2024-2025
+  年的事。原因是多层的。
+
+  1. 早期根本不需要 OPD
+
+  前 LLM 时代，exposure bias 不是致命问题。
+
+  图像分类 KD（Hinton 2015）：
+    输入：一张图片
+    输出：一个类别分布
+    → 不存在序列生成，没有 prefix，没有 exposure bias
+
+  BERT 蒸馏（DistilBERT, TinyBERT）：
+    输入：一段文本
+    输出：每个位置的 token 分类（MLM）或句子表示
+    → 本质还是分类任务，不是自回归生成
+
+  机器翻译蒸馏（Kim & Rush 2016）：
+    序列长度：~30 tokens
+    O(εT²) 的 T=30 → error compounding 不严重
+    teacher forcing 够用了
+
+  OPD 的理论优势体现在长序列上。序列越短，exposure bias 越不重要。在序列长度 30
+  的翻译任务上，on-policy 的收益不值得付出几十倍的训练成本。
+
+  2. LLM 让问题变严重了
+
+  LLM 的生成：
+    序列长度：500 ~ 8000+ tokens（尤其是 CoT 推理）
+    T = 1000 → O(εT²) vs O(εT) 的差距是 1000 倍
+    一步错 → 后面全部跑偏（幻觉、推理断裂）
+
+  但是，2023 年初大家忙着搞 SFT 和 RLHF，还没意识到问题的严重性。Gudibande et
+  al. (2023) 是第一篇系统性地指出"在 GPT-4 数据上 SFT
+  微调的小模型在有延展性需求的任务上表现很差"的论文——这其实就是 exposure bias
+  的实证验证。
+
+  3. 工程上的阻碍巨大
+
+  就算理论上有道理，2024 年之前要跑 OPD 非常困难：
+
+  内存问题
+
+  白盒 OPD 需要同时加载：
+    教师模型 (70B):     ~140 GB (BF16)
+    学生模型 (7B):      ~14 GB
+    学生优化器状态:      ~28 GB (Adam)
+    KV Cache (生成用):   ~10+ GB
+    Logits 张量:        [batch, seq_len, |V|] ≈ 几 GB
+    ──────────────────────────────
+    总计:               ~200+ GB → 需要 3-4 张 H100 (80GB)
+
+  对比 SFT：
+    只需要学生模型 + 优化器 = ~42 GB → 1 张 H100
+
+  速度问题
+
+  SFT (teacher forcing):
+    1 次 forward + 1 次 backward → 每步 ~2 秒
+
+  OPD (on-policy):
+    1. 学生自回归生成序列: ~seq_len 次 forward → ~30 秒
+    2. 教师前向传播: 1 次 forward → ~3 秒
+    3. 学生前向传播: 1 次 forward → ~0.5 秒
+    4. 学生反向传播: 1 次 backward → ~1 秒
+    ──────────────────────────────
+    每步 ~35 秒，慢了 ~17 倍
+
+  训练稳定性问题
+
+  MiniLLM 用 REINFORCE
+  算梯度，方差极高。早期训练时学生很弱，生成的序列几乎全是垃圾——在这些序列上算
+  policy gradient，信号被噪声淹没。论文里提到 MiniLLM 需要很多工程
+  trick（teacher mixing、per-token baseline、length normalization）才能收敛。
+
+  4. 几个关键催化剂
+
+  时间线：
+
+  2023年：
+    - SFT 是主流，大家觉得"数据质量够好就行了"
+    - Gudibande et al. 指出 SFT 蒸馏的瓶颈
+
+  2024年上半年：
+    - GKD (Google, ICLR 2024) → 第一个实用的 LLM OPD 框架
+      关键贡献：混合采样策略 λ，JSD 作为默认 divergence
+    - MiniLLM (ICLR 2024) → 证明 Reverse KL 对 LLM 更好
+      但 REINFORCE 不稳定，实际效果受限
+
+  2024年下半年：
+    - DistiLLM (ICML 2024) → 用 skewed KL 解决稳定性问题
+      不需要 REINFORCE，梯度有解析形式
+    → 这三篇论文证明 OPD 在工程上可行
+
+  2025年1月：
+    - DeepSeek-R1 发布 → 800K off-policy 数据 SFT 效果惊人
+    - 但也暴露了 off-policy 的天花板（长推理链的 exposure bias）
+    - 引发整个社区思考：怎么在 R1 蒸馏基础上进一步提升？
+
+  2025年上半年：
+    - Qwen3 报告了工业级 OPD 的实践
+    - 一系列方法涌现：ToDi, Entropy-Aware OPD, G-OPD, PACED...
+    - 从"OPD 能不能用"变成"OPD 怎么做得更好"
+
+  2025年下半年（现在）：
+    - OPD 成为推理蒸馏的标准配置
+    - 这篇综述论文本身就是 OPD 成为主流的标志
+
+  总结
+
+  OPD 不是突然出现的，而是技术条件逐渐成熟的结果：
+
+  ┌───────────┬─────────────────────────────────────────────────────────────┐
+  │   阶段    │                    为什么 OPD 没成为主流                    │
+  ├───────────┼─────────────────────────────────────────────────────────────┤
+  │ 2023      │ 序列不够长，exposure bias 不致命                            │
+  │ 年以前    │                                                             │
+  ├───────────┼─────────────────────────────────────────────────────────────┤
+  │ 2023 年   │ SFT 够用，问题还没暴露                                      │
+  ├───────────┼─────────────────────────────────────────────────────────────┤
+  │ 2024 年初 │ 知道问题了，但训练不稳定（MiniLLM 的 REINFORCE）            │
+  ├───────────┼─────────────────────────────────────────────────────────────┤
+  │ 2024 年中 │ GKD + DistiLLM 解决了稳定性，但社区还在观望                 │
+  ├───────────┼─────────────────────────────────────────────────────────────┤
+  │ 2025 年   │ R1 证明了推理蒸馏的规模，也暴露了 off-policy 天花板 → OPD   │
+  │           │ 成为刚需                                                    │
+  └───────────┴─────────────────────────────────────────────────────────────┘
+
+  本质上就是：问题一直存在，但早期不够严重、方案不够成熟、算力不够充裕。
+  三个条件同时满足的时候，OPD 才自然成为主流。
+
+✻ Sautéed for 1m 12s
+
+※ recap: 你在学习 OPD 综述论文，目前已经学到 2.2 节，我们一起梳理了 KD 基础、token-level vs sequence-level 蒸馏、exposure bias、teacher forcing 的机制、白盒/黑盒蒸馏的信号差异，以及 OPD 为什么在 2025 年才成为主流。下一步可以继续讲 2.3 节的 MDP 形式化。
+
+> /btw 
+  ⎿  Usage: /btw
+
+> 我怎么导出我们的聊天记录                                                      
+
+● 在 Claude Code 里可以直接运行：
+
+  /export
+
+  这会将当前对话导出为 Markdown 文件。你也可以指定路径：
+
+  /export path/to/file.md
+
+  如果 /export 不可用，另一个方式是用 /history 查看历史记录。
+
+✻ Churned for 11s

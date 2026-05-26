@@ -1,0 +1,241 @@
+hydra:
+  run:
+    dir: outputs/${now:%Y-%m-%d}/${now:%H-%M-%S}
+  sweep:
+    dir: multirun/${now:%Y-%m-%d}/${now:%H-%M-%S}
+    subdir: ${hydra.job.num}
+  launcher:
+    _target_: hydra._internal.core_plugins.basic_launcher.BasicLauncher
+  sweeper:
+    _target_: hydra._internal.core_plugins.basic_sweeper.BasicSweeper
+    max_batch_size: null
+    params: null
+  help:
+    app_name: ${hydra.job.name}
+    header: '${hydra.help.app_name} is powered by Hydra.
+
+      '
+    footer: 'Powered by Hydra (https://hydra.cc)
+
+      Use --hydra-help to view Hydra specific help
+
+      '
+    template: '${hydra.help.header}
+
+      == Configuration groups ==
+
+      Compose your configuration from those groups (group=option)
+
+
+      $APP_CONFIG_GROUPS
+
+
+      == Config ==
+
+      Override anything in the config (foo.bar=value)
+
+
+      $CONFIG
+
+
+      ${hydra.help.footer}
+
+      '
+  hydra_help:
+    template: 'Hydra (${hydra.runtime.version})
+
+      See https://hydra.cc for more info.
+
+
+      == Flags ==
+
+      $FLAGS_HELP
+
+
+      == Configuration groups ==
+
+      Compose your configuration from those groups (For example, append hydra/job_logging=disabled
+      to command line)
+
+
+      $HYDRA_CONFIG_GROUPS
+
+
+      Use ''--cfg hydra'' to Show the Hydra config.
+
+      '
+    hydra_help: ???
+  hydra_logging:
+    version: 1
+    formatters:
+      simple:
+        format: '[%(asctime)s][HYDRA] %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        stream: ext://sys.stdout
+    root:
+      level: INFO
+      handlers:
+      - console
+    loggers:
+      logging_example:
+        level: DEBUG
+    disable_existing_loggers: false
+  job_logging:
+    version: 1
+    formatters:
+      simple:
+        format: '[%(asctime)s][%(name)s][%(levelname)s] - %(message)s'
+    handlers:
+      console:
+        class: logging.StreamHandler
+        formatter: simple
+        stream: ext://sys.stdout
+      file:
+        class: logging.FileHandler
+        formatter: simple
+        filename: ${hydra.runtime.output_dir}/${hydra.job.name}.log
+    root:
+      level: INFO
+      handlers:
+      - console
+      - file
+    disable_existing_loggers: false
+  env: {}
+  mode: RUN
+  searchpath: []
+  callbacks: {}
+  output_subdir: .hydra
+  overrides:
+    hydra:
+    - hydra.mode=RUN
+    task:
+    - data.train_files=/home/young/TFI/data/fipo/train.parquet
+    - data.val_files=/home/young/TFI/data/fipo/val.parquet
+    - data.prompt_key=prompt
+    - data.image_key=images
+    - data.truncation=left
+    - data.max_prompt_length=4096
+    - data.max_response_length=512
+    - data.train_batch_size=4
+    - actor_rollout_ref.model.path=/mnt/nfs/young/TFI/models/sft_merged_1441_v2
+    - actor_rollout_ref.model.enable_gradient_checkpointing=True
+    - actor_rollout_ref.actor.strategy=fsdp2
+    - actor_rollout_ref.ref.strategy=fsdp2
+    - actor_rollout_ref.actor.optim.lr=1e-6
+    - actor_rollout_ref.actor.optim.lr_warmup_steps=10
+    - actor_rollout_ref.actor.ppo_mini_batch_size=2
+    - actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1
+    - actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1
+    - actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1
+    - actor_rollout_ref.actor.entropy_coeff=0
+    - actor_rollout_ref.actor.grad_clip=1.0
+    - actor_rollout_ref.actor.use_kl_loss=False
+    - actor_rollout_ref.actor.policy_loss.loss_mode=future_kl
+    - actor_rollout_ref.actor.clip_ratio_low=0.2
+    - actor_rollout_ref.actor.clip_ratio_high=0.28
+    - actor_rollout_ref.actor.clip_ratio_c=10.0
+    - actor_rollout_ref.actor.fsdp_config.param_offload=True
+    - actor_rollout_ref.actor.fsdp_config.optimizer_offload=False
+    - actor_rollout_ref.rollout.name=vllm
+    - actor_rollout_ref.rollout.n=2
+    - actor_rollout_ref.rollout.temperature=1.0
+    - actor_rollout_ref.rollout.top_p=0.95
+    - actor_rollout_ref.rollout.gpu_memory_utilization=0.55
+    - actor_rollout_ref.rollout.tensor_model_parallel_size=1
+    - actor_rollout_ref.rollout.enable_chunked_prefill=True
+    - actor_rollout_ref.rollout.max_num_batched_tokens=4608
+    - actor_rollout_ref.rollout.max_model_len=4608
+    - actor_rollout_ref.rollout.prompt_length=4096
+    - actor_rollout_ref.rollout.response_length=512
+    - +actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.min_dynamic_patch=1
+    - +actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.max_dynamic_patch=1
+    - +actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.dynamic_image_size=False
+    - +actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.use_thumbnail=False
+    - actor_rollout_ref.ref.fsdp_config.param_offload=True
+    - algorithm.adv_estimator=grpo
+    - algorithm.use_kl_in_reward=False
+    - algorithm.kl_ctrl.kl_coef=0.0
+    - reward.reward_manager.source=importlib
+    - reward.reward_manager.name=TFIAuditRewardManager
+    - reward.reward_manager.module.path=/home/young/TFI/train/fipo/verl_patches/reward_manager.py
+    - reward.reward_model.enable=False
+    - trainer.logger=["console"]
+    - trainer.project_name=TFI-forgery-detection
+    - trainer.experiment_name=FIPO-intern-smoke23
+    - trainer.n_gpus_per_node=4
+    - trainer.nnodes=1
+    - trainer.val_before_train=True
+    - trainer.test_freq=10
+    - trainer.save_freq=40
+    - trainer.max_actor_ckpt_to_keep=2
+    - trainer.total_epochs=2
+    - trainer.default_local_dir=/mnt/nfs/young/TFI/runs/fipo/FIPO-intern-smoke23
+    - trainer.resume_mode=auto
+    - trainer.total_epochs=1
+    - trainer.save_freq=8
+    - trainer.test_freq=8
+    - trainer.val_before_train=False
+    - actor_rollout_ref.model.trust_remote_code=True
+    - +actor_rollout_ref.model.override_config.attn_implementation=eager
+    - actor_rollout_ref.rollout.enable_prefix_caching=False
+    - actor_rollout_ref.rollout.enforce_eager=True
+    - actor_rollout_ref.actor.fsdp_config.optimizer_offload=True
+  job:
+    name: main_ppo
+    chdir: null
+    override_dirname: +actor_rollout_ref.model.override_config.attn_implementation=eager,+actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.dynamic_image_size=False,+actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.max_dynamic_patch=1,+actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.min_dynamic_patch=1,+actor_rollout_ref.rollout.engine_kwargs.vllm.mm_processor_kwargs.use_thumbnail=False,actor_rollout_ref.actor.clip_ratio_c=10.0,actor_rollout_ref.actor.clip_ratio_high=0.28,actor_rollout_ref.actor.clip_ratio_low=0.2,actor_rollout_ref.actor.entropy_coeff=0,actor_rollout_ref.actor.fsdp_config.optimizer_offload=False,actor_rollout_ref.actor.fsdp_config.optimizer_offload=True,actor_rollout_ref.actor.fsdp_config.param_offload=True,actor_rollout_ref.actor.grad_clip=1.0,actor_rollout_ref.actor.optim.lr=1e-6,actor_rollout_ref.actor.optim.lr_warmup_steps=10,actor_rollout_ref.actor.policy_loss.loss_mode=future_kl,actor_rollout_ref.actor.ppo_micro_batch_size_per_gpu=1,actor_rollout_ref.actor.ppo_mini_batch_size=2,actor_rollout_ref.actor.strategy=fsdp2,actor_rollout_ref.actor.use_kl_loss=False,actor_rollout_ref.model.enable_gradient_checkpointing=True,actor_rollout_ref.model.path=/mnt/nfs/young/TFI/models/sft_merged_1441_v2,actor_rollout_ref.model.trust_remote_code=True,actor_rollout_ref.ref.fsdp_config.param_offload=True,actor_rollout_ref.ref.log_prob_micro_batch_size_per_gpu=1,actor_rollout_ref.ref.strategy=fsdp2,actor_rollout_ref.rollout.enable_chunked_prefill=True,actor_rollout_ref.rollout.enable_prefix_caching=False,actor_rollout_ref.rollout.enforce_eager=True,actor_rollout_ref.rollout.gpu_memory_utilization=0.55,actor_rollout_ref.rollout.log_prob_micro_batch_size_per_gpu=1,actor_rollout_ref.rollout.max_model_len=4608,actor_rollout_ref.rollout.max_num_batched_tokens=4608,actor_rollout_ref.rollout.n=2,actor_rollout_ref.rollout.name=vllm,actor_rollout_ref.rollout.prompt_length=4096,actor_rollout_ref.rollout.response_length=512,actor_rollout_ref.rollout.temperature=1.0,actor_rollout_ref.rollout.tensor_model_parallel_size=1,actor_rollout_ref.rollout.top_p=0.95,algorithm.adv_estimator=grpo,algorithm.kl_ctrl.kl_coef=0.0,algorithm.use_kl_in_reward=False,data.image_key=images,data.max_prompt_length=4096,data.max_response_length=512,data.prompt_key=prompt,data.train_batch_size=4,data.train_files=/home/young/TFI/data/fipo/train.parquet,data.truncation=left,data.val_files=/home/young/TFI/data/fipo/val.parquet,reward.reward_manager.module.path=/home/young/TFI/train/fipo/verl_patches/reward_manager.py,reward.reward_manager.name=TFIAuditRewardManager,reward.reward_manager.source=importlib,reward.reward_model.enable=False,trainer.default_local_dir=/mnt/nfs/young/TFI/runs/fipo/FIPO-intern-smoke23,trainer.experiment_name=FIPO-intern-smoke23,trainer.logger=["console"],trainer.max_actor_ckpt_to_keep=2,trainer.n_gpus_per_node=4,trainer.nnodes=1,trainer.project_name=TFI-forgery-detection,trainer.resume_mode=auto,trainer.save_freq=40,trainer.save_freq=8,trainer.test_freq=10,trainer.test_freq=8,trainer.total_epochs=1,trainer.total_epochs=2,trainer.val_before_train=False,trainer.val_before_train=True
+    id: ???
+    num: ???
+    config_name: ppo_trainer
+    env_set: {}
+    env_copy: []
+    config:
+      override_dirname:
+        kv_sep: '='
+        item_sep: ','
+        exclude_keys: []
+  runtime:
+    version: 1.3.2
+    version_base: '1.3'
+    cwd: /home/young/TFI
+    config_sources:
+    - path: hydra.conf
+      schema: pkg
+      provider: hydra
+    - path: verl.trainer.config
+      schema: pkg
+      provider: main
+    - path: ''
+      schema: structured
+      provider: schema
+    output_dir: /home/young/TFI/outputs/2026-05-07/00-56-23
+    choices:
+      distillation: distillation
+      algorithm@algorithm.rollout_correction: rollout_correction
+      reward: reward
+      model@critic.model: hf_model
+      model@actor_rollout_ref.model: hf_model
+      rollout@actor_rollout_ref.rollout: rollout
+      data: legacy_data
+      model_engine: dp
+      critic: dp_critic
+      critic/../engine@critic.fsdp: fsdp
+      critic/../optim@critic.optim: fsdp
+      ref@actor_rollout_ref.ref: dp_ref
+      ref/../engine@actor_rollout_ref.ref.fsdp_config: fsdp
+      actor@actor_rollout_ref.actor: dp_actor
+      actor/../engine@actor_rollout_ref.actor.fsdp_config: fsdp
+      actor/../optim@actor_rollout_ref.actor.optim: fsdp
+      hydra/env: default
+      hydra/callbacks: null
+      hydra/job_logging: default
+      hydra/hydra_logging: default
+      hydra/hydra_help: default
+      hydra/help: default
+      hydra/sweeper: basic
+      hydra/launcher: basic
+      hydra/output: default
+  verbose: false

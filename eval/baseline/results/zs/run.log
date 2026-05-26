@@ -1,0 +1,35 @@
+[16:35:34] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:35:34] val samples: 2 (forged=2, real=0)
+[16:35:34] loading model + processor ...
+[16:37:24] model loaded on cuda, peak mem (alloc): 18.83GB
+[16:38:11] === DONE: /home/young/TFI/tools/baseline/results/zs/predictions.csv (n=2, total=47s) ===
+[16:39:31] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:39:31] val samples: 2 (forged=2, real=0)
+[16:39:31] loading model + processor ...
+[16:39:41] model loaded on cuda, peak mem (alloc): 18.83GB
+[16:40:49] === DONE: /home/young/TFI/tools/baseline/results/zs/predictions.csv (n=2, total=69s) ===
+[16:42:01] === prompt-only baseline | mode=zs | model=/home/young/TFI/models/Qwen3.5-9B ===
+[16:42:01] val samples: 200 (forged=160, real=40)
+[16:42:01] loading model + processor ...
+[16:42:10] model loaded on cuda, peak mem (alloc): 18.83GB
+[16:45:53] [10/200] elapsed=224s  avg=22.4s/sample
+[16:49:06] [20/200] elapsed=417s  avg=20.8s/sample
+[16:53:07] [30/200] elapsed=658s  avg=21.9s/sample
+[16:55:30] [40/200] elapsed=800s  avg=20.0s/sample
+[16:58:46] [50/200] elapsed=996s  avg=19.9s/sample
+[17:01:39] [60/200] elapsed=1170s  avg=19.5s/sample
+[17:05:50] [70/200] elapsed=1421s  avg=20.3s/sample
+[17:08:51] [80/200] elapsed=1601s  avg=20.0s/sample
+[17:11:24] [90/200] elapsed=1754s  avg=19.5s/sample
+[17:16:11] [100/200] elapsed=2042s  avg=20.4s/sample
+[17:20:18] [110/200] elapsed=2289s  avg=20.8s/sample
+[17:25:14] [120/200] elapsed=2585s  avg=21.5s/sample
+[17:28:20] [130/200] elapsed=2771s  avg=21.3s/sample
+[17:32:26] [140/200] elapsed=3016s  avg=21.5s/sample
+[17:35:45] [150/200] elapsed=3216s  avg=21.4s/sample
+[17:39:23] [160/200] elapsed=3433s  avg=21.5s/sample
+[17:42:43] [170/200] elapsed=3634s  avg=21.4s/sample
+[17:45:54] [180/200] elapsed=3824s  avg=21.2s/sample
+[17:49:57] [190/200] elapsed=4067s  avg=21.4s/sample
+[17:52:45] [200/200] elapsed=4235s  avg=21.2s/sample
+[17:52:45] === DONE: /home/young/TFI/tools/baseline/results/zs/predictions.csv (n=200, total=4235s) ===
